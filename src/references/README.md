@@ -1,1 +1,0 @@
-This folder contains different reference configurations. Currently, they are mostly pertinent to Van Andel Research Institute computing environment.

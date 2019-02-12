@@ -1,4 +1,4 @@
-source ~/wzlib/bash/wzseq.sh
+source $WZSEQ_ENTRY
 wzref_hg19_noContig
 pipeline_prepare
 

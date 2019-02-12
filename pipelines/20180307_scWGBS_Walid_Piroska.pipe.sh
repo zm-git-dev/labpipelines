@@ -1,4 +1,4 @@
-source ~/wzlib/bash/wzseq.sh
+source $WZSEQ_ENTRY
 wzref_mm10
 pipeline_prepare
 

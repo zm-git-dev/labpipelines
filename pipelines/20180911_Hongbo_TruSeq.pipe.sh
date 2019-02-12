@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/wzlib/bash/wzseq.sh
+source $WZSEQ_ENTRY
 wzref_hg19
 pipeline_prepare
 
