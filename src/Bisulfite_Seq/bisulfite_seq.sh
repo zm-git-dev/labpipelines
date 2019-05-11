@@ -289,6 +289,19 @@ ln -s `readlink -f '$trim_galore_dir'` multiqc/raw/trim_galore/
   jobname="trim_galore_PE_"$sname
 }
 
+function __wzseq_trim_galore_PE2 {
+  cmd='
+set -xe
+cd '$base'
+[[ -d '$trim_galore_dir' ]] && rm -rf '$trim_galore_dir'
+mkdir -p '$trim_galore_dir'
+~/software/trim_galore/default/trim_galore --quality 28 --phred33 --fastqc --clip_R1 9 --clip_R2 9 --three_prime_clip_R1 9 --three_prime_clip_R2 9 --paired '$fastq1' '$fastq2' -o '$trim_galore_dir'
+mkdir -p multiqc/raw/trim_galore/
+ln -s `readlink -f '$trim_galore_dir'` multiqc/raw/trim_galore/
+'
+  jobname="trim_galore_PE_"$sname
+}
+
 function __wzseq_customize {
   cmd="
 set -xe
