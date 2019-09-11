@@ -139,6 +139,7 @@ function wzref_hg38 {
   # export WZSEQ_BOWTIE2_INDEX=/home/wanding.zhou/references/hg19/bowtie2/hg19
   # export WZSEQ_BOWTIE1_INDEX=/home/wanding.zhou/references/hg19/bowtie1/hg19
   # export WZSEQ_STAR_INDEX=/primary/vari/genomicdata/genomes/hg19/STAR
+  export WZSEQ_STAR_INDEX=/primary/vari/genomicdata/genomes/hg38/STAR
   # export WZSEQ_RSEQC_GENE_BED=/primary/vari/genomicdata/genomes/hg19/rseqc/hg19_GENCODE_GENE_V19_comprehensive.bed
   export WZSEQ_BISMARK_BT2_INDEX=/home/wanding.zhou/references/hg38/bismark_bt2
   export WZSEQ_BISCUIT_INDEX=/primary/vari/genomicdata/genomes/hg38/biscuit/hg38.fa

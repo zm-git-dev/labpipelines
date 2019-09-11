@@ -182,6 +182,8 @@ function rnaseq_hisat2 {
 # STAR --runThreadN 28 --runMode genomeGenerate --genomeDir $WZSEQ_STAR_INDEX --genomeFastaFiles $WZSEQ_REFERENCE --sjdbGTFfile $WZSEQ_GTF
 # STAR --runThreadN 28 --runMode genomeGenerate --genomeDir . --genomeFastaFiles mm10.fa --sjdbGTFfile ~/references/mm10/gtf/Mus_musculus.GRCm38.82.gtf.UCSCnaming [--sjdbOverhang 49 (default 100)]
 # note that the GTF must be unzipped!!
+# cd /primary/vari/genomicdata/genomes/hg38/STAR
+# ~/software/STAR/default/bin/Linux_x86_64/STAR --runThreadN 28 --runMode genomeGenerate --genomeDir . --genomeFastaFiles hg38.fa --sjdbGTFfile ../annotation/gencode.v28.annotation.gtf.gz
 # 
 # mapping quality:
 # 255 = uniquely mapped reads
@@ -197,9 +199,9 @@ function __rnaseq_STAR {
 set -xe
 cd '$base'
 mkdir '$base'/bam/'$sname'
-~/software/STAR/default/bin/Linux_x86_64/STAR --runThreadN '$ppn' --genomeDir '$WZSEQ_STAR_INDEX' --readFilesIn '$fq1' '$fq2' --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --outFileNamePrefix bam/'$sname' --outBAMsortingThreadN '$ppn_sort'
+~/software/STAR/default/bin/Linux_x86_64/STAR --runThreadN '$ppn' --genomeDir '$WZSEQ_STAR_INDEX' --readFilesIn '$fq1' '$fq2' --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --outFileNamePrefix bam/'$sname'/ --outBAMsortingThreadN '$ppn_sort'
 cd bam
-ln -s bam/'$sname'/'${sname}'Aligned.sortedByCoord.out.bam bam/'$sname'.bam
+ln -s bam/'$sname'/Aligned.sortedByCoord.out.bam bam/'$sname'.bam
 samtools index bam/'$sname'.bam
 samtools flagstat bam/'$sname'.bam >bam/'$sname'.bam.flagstat
 '
