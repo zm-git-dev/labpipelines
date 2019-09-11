@@ -2,39 +2,23 @@ source $WZSEQ_ENTRY
 wzref_mm10
 pipeline_prepare
 
-while read sname fastqname; do
+while read sname fqname; do
   jump_comments
 
   ### QC fastq ####
-  fastq1=fastq/${sname}_R1_001.fastq.gz
-  fastq2=fastq/${sname}_R2_001.fastq.gz
-  hour=48; memG=10; ppn=1; queue=shortq
   pipeline_depend none
+  fastq1=fastq2/${sname}_R1.fq.gz
+  fastq2=fastq2/${sname}_R2.fq.gz
+  trim_galore_dir=fastq_trim_galore/$sname/
+  hour=48; memG=10; ppn=1; queue=shortq
   pipeline_eval 1 __wzseq_trim_galore_PE2
 
-  fastq=fastq/${sname}_R1_001.fastq.gz
-  fastq_sname=${sname}_R1
-  hour=12; memG=5; ppn=1; queue=shortq
-  pipeline_depend none
-  pipeline_eval 2 __wzseq_fastqc
-
-  fastq=fastq/${sname}_R2_001.fastq.gz
-  fastq_sname=${sname}_R2
-  hour=12; memG=5; ppn=1; queue=shortq
-  pipeline_depend none
-  pipeline_eval 3 __wzseq_fastqc
-
   ## alignment
-  pipeline_depend none
-  fastq1=fastq/${sname}_R1_001.fastq.gz
-  fastq2=fastq/${sname}_R2_001.fastq.gz
+  fastq1=fastq_trim_galore/$sname/${sname}_R1_val_1.fq.gz
+  fastq2=fastq_trim_galore/$sname/${sname}_R2_val_2.fq.gz
   output_bam=bam/${sname}.bam
   hour=48; memG=200; ppn=28; queue=shortq
-  pipeline_depend none
   pipeline_eval 11 __wgbs_biscuit_align_PE_Walid_lib
-  bam=bam/${sname}.bam
-  hour=1; memG=5; ppn=1
-  pipeline_eval 12 __wzseq_index_bam
 
   input_bam=bam/${sname}.bam
   output_bam=bam/${sname}_markdup.bam
@@ -47,7 +31,7 @@ while read sname fastqname; do
   ## pileup
   input_bam=bam/${sname}_markdup.bam
   output_vcf=pileup/${sname}.vcf.gz
-  hour=12; memG=80; ppn=20; queue=shortq
+  hour=12; memG=50; ppn=5; queue=shortq
   pipeline_depend 14
   pipeline_eval 15 __wgbs_biscuit_pileup
 
@@ -61,65 +45,50 @@ while read sname fastqname; do
   hour=24; memG=50; ppn=10; queue=shortq
   pipeline_depend 14
   pipeline_eval 23 __wzseq_qualimap_bamqc
-
-  fastq=fastq/${sname}_L005_R1_001.fastq.gz
-  output_bam=bam/${sname}_SE_mate1.bam
-  hour=48; memG=200; ppn=28; queue=longq;
-  pipeline_depend none
-  pipeline_eval 50 __wgbs_biscuit_align_SE
-  bam=bam/${sname}_SE_mate1.bam
-  hour=1; memG=15; ppn=1; queue=longq;
-  pipeline_eval 51 __wzseq_index_bam
-  
-  input_bam=bam/${sname}_SE_mate1.bam
-  output_sname=${sname}_SE_mate1
-  hour=24; memG=50; ppn=10; queue=shortq
-  pipeline_depend none
-  pipeline_eval 52 __wzseq_qualimap_bamqc
   
 done << EOM
-Col-2-A1	SE5227_FT-SA23990_S48_L006
-Col-2-A3	SE5227_FT-SA23991_S49_L006
-Col-2-A4	SE5227_FT-SA23992_S50_L006
-Col-2-A8	SE5227_FT-SA23993_S51_L006
-Col-2-B1	SE5227_FT-SA23994_S52_L006
-Col-2-B3	SE5227_FT-SA23995_S53_L006
-Col-2-B4	SE5227_FT-SA23996_S54_L006
-Col-2-B5	SE5227_FT-SA23997_S55_L006
-Col-2-D2	SE5227_FT-SA23998_S56_L006
-Col-2-D3	SE5227_FT-SA23999_S57_L006
-Col-2-D4	SE5227_FT-SA24000_S58_L006
-Col-2-D5	SE5227_FT-SA24001_S59_L006
-Col-3-E1	SE5250_FT-SA27060_S64_L005
-Col-3-E10	SE5250_FT-SA27064_S68_L005
-Col-3-E2	SE5250_FT-SA27061_S65_L005
-Col-3-E4	SE5250_FT-SA27062_S66_L005
-Col-3-E9	SE5250_FT-SA27063_S67_L005
-Col-3-F12	SE5250_FT-SA27069_S73_L005
-Col-3-F2	SE5250_FT-SA27065_S69_L005
-Col-3-F3	SE5250_FT-SA27066_S70_L005
-Col-3-F6	SE5250_FT-SA27067_S71_L005
-Col-3-F9	SE5250_FT-SA27068_S72_L005
-Col-3-G1	SE5250_FT-SA27070_S74_L005
-Col-3-G7	SE5250_FT-SA27071_S75_L005
-Col-3-G8	SE5250_FT-SA27072_S76_L005
-Col-3-H10	SE5250_FT-SA27075_S79_L005
-Col-3-H2	SE5250_FT-SA27073_S77_L005
-Col-3-H3	SE5250_FT-SA27074_S78_L005
-Col-4-A10	SE5249_FT-SA27009_S84_L006
-Col-4-A12	SE5249_FT-SA27010_S85_L006
-Col-4-A3	SE5249_FT-SA27005_S80_L006
-Col-4-A5	SE5249_FT-SA27006_S81_L006
-Col-4-A6	SE5249_FT-SA27007_S82_L006
-Col-4-A7	SE5249_FT-SA27008_S83_L006
-Col-4-B1	SE5249_FT-SA27011_S86_L006
-Col-4-B10	SE5249_FT-SA27018_S93_L006
-Col-4-B2	SE5249_FT-SA27012_S87_L006
-Col-4-B3	SE5249_FT-SA27013_S88_L006
-Col-4-B4	SE5249_FT-SA27014_S89_L006
-Col-4-B5	SE5249_FT-SA27015_S90_L006
-Col-4-B6	SE5249_FT-SA27016_S91_L006
-Col-4-B7	SE5249_FT-SA27017_S92_L006
+# Col-2-A1	SE5227_FT-SA23990_S48_L006
+# Col-2-A3	SE5227_FT-SA23991_S49_L006
+# Col-2-A4	SE5227_FT-SA23992_S50_L006
+# Col-2-A8	SE5227_FT-SA23993_S51_L006
+# Col-2-B1	SE5227_FT-SA23994_S52_L006
+# Col-2-B3	SE5227_FT-SA23995_S53_L006
+# Col-2-B4	SE5227_FT-SA23996_S54_L006
+# Col-2-B5	SE5227_FT-SA23997_S55_L006
+# Col-2-D2	SE5227_FT-SA23998_S56_L006
+# Col-2-D3	SE5227_FT-SA23999_S57_L006
+# Col-2-D4	SE5227_FT-SA24000_S58_L006
+# Col-2-D5	SE5227_FT-SA24001_S59_L006
+# Col-3-E1	SE5250_FT-SA27060_S64_L005
+# Col-3-E10	SE5250_FT-SA27064_S68_L005
+# Col-3-E2	SE5250_FT-SA27061_S65_L005
+# Col-3-E4	SE5250_FT-SA27062_S66_L005
+# Col-3-E9	SE5250_FT-SA27063_S67_L005
+# Col-3-F12	SE5250_FT-SA27069_S73_L005
+# Col-3-F2	SE5250_FT-SA27065_S69_L005
+# Col-3-F3	SE5250_FT-SA27066_S70_L005
+# Col-3-F6	SE5250_FT-SA27067_S71_L005
+# Col-3-F9	SE5250_FT-SA27068_S72_L005
+# Col-3-G1	SE5250_FT-SA27070_S74_L005
+# Col-3-G7	SE5250_FT-SA27071_S75_L005
+# Col-3-G8	SE5250_FT-SA27072_S76_L005
+# Col-3-H10	SE5250_FT-SA27075_S79_L005
+# Col-3-H2	SE5250_FT-SA27073_S77_L005
+# Col-3-H3	SE5250_FT-SA27074_S78_L005
+# Col-4-A10	SE5249_FT-SA27009_S84_L006
+# Col-4-A12	SE5249_FT-SA27010_S85_L006
+# Col-4-A3	SE5249_FT-SA27005_S80_L006
+# Col-4-A5	SE5249_FT-SA27006_S81_L006
+# Col-4-A6	SE5249_FT-SA27007_S82_L006
+# Col-4-A7	SE5249_FT-SA27008_S83_L006
+# Col-4-B1	SE5249_FT-SA27011_S86_L006
+# Col-4-B10	SE5249_FT-SA27018_S93_L006
+# Col-4-B2	SE5249_FT-SA27012_S87_L006
+# Col-4-B3	SE5249_FT-SA27013_S88_L006
+# Col-4-B4	SE5249_FT-SA27014_S89_L006
+# Col-4-B5	SE5249_FT-SA27015_S90_L006
+# Col-4-B6	SE5249_FT-SA27016_S91_L006
+# Col-4-B7	SE5249_FT-SA27017_S92_L006
 SI-2-E2	SE5228_FT-SA23978_S60_L007
 SI-2-E3	SE5228_FT-SA23979_S61_L007
 SI-2-E8	SE5228_FT-SA23980_S62_L007
@@ -187,3 +156,5 @@ SI-4-H8	SE5249_FT-SA27043_S118_L006
 SI-4-H9	SE5249_FT-SA27044_S119_L006
 EOM
 
+## for f in raw/biscuit/*_markdup_report.txt; do echo -e $(basename $f _markdup.bam_markdup_report.txt)"\t"$(head -1 $f | awk -F " " '{print $3}'); done > all_number_of_reads.txt
+## for f in raw/biscuit/*_markdup_report.txt; do echo -e $(basename $f _markdup.bam_markdup_report.txt)"\t"$(awk 'NR==2{match($0,/([0-9\.]*)%/,a); print a[1];}' $f); done >all_PEdups.txt

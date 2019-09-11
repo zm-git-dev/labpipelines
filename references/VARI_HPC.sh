@@ -36,7 +36,7 @@ function wzref_mm10 {
   # WGBS indices
   export WZSEQ_BISCUIT_INDEX_LAMBDAPHAGE=/home/wanding.zhou/references/lambdaphage/biscuit/NC_001416.fa
   export WZSEQ_BISCUIT_INDEX=/home/wanding.zhou/references/mm10/biscuit/mm10.fa
-  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test/QC_assets/mm10_QC_assets/setup.sh
+  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test_shen/QC_assets/mm10_QC_assets/setup.sh
   export WZSEQ_BWAMETH_INDEX=/home/wanding.zhou/references/mm10/bwameth/mm10.fa
 
   export WZSEQ_BISMARK_BT1_INDEX=/home/wanding.zhou/references/mm10/bismark_bt1
@@ -105,7 +105,7 @@ function wzref_hg19 {
   export WZSEQ_CGIBED=/primary/vari/genomicdata/genomes/hg19/annotation/cpgisland/cpgIslandExt.bed
   export WZSEQ_TSSBED=/primary/vari/genomicdata/genomes/hg19/annotation/hg19.refseq.tss.bed
   export WZSEQ_MACS_SHORT=hs
-  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test/QC_assets/hg19_QC_assets/setup.sh
+  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test_shen/QC_assets/hg19_QC_assets/setup.sh
 
   # rmsk
   export WZSEQ_RMSK=/primary/vari/genomicdata/genomes/hg19/annotation/rmsk/rmsk.txt.bed
@@ -142,7 +142,7 @@ function wzref_hg38 {
   # export WZSEQ_RSEQC_GENE_BED=/primary/vari/genomicdata/genomes/hg19/rseqc/hg19_GENCODE_GENE_V19_comprehensive.bed
   export WZSEQ_BISMARK_BT2_INDEX=/home/wanding.zhou/references/hg38/bismark_bt2
   export WZSEQ_BISCUIT_INDEX=/primary/vari/genomicdata/genomes/hg38/biscuit/hg38.fa
-  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test/QC_assets/hg38_QC_assets/setup.sh
+  export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test_shen/QC_assets/hg38_QC_assets/setup.sh
   # export WZSEQ_SUBREAD_INDEX=/primary/vari/genomicdata/genomes/hg19/subread/hg19
   # export WZSEQ_REFERENCE_SPLIT=/primary/vari/genomicdata/genomes/hg19/tophat/Homo_sapiens/UCSC/hg19/Sequence/Chromosomes
 

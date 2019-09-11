@@ -1,3 +1,4 @@
+
 #
 ################################################################################
 # RNA-seq pipeline
@@ -188,6 +189,23 @@ function rnaseq_hisat2 {
 # 2 = read maps to 3 locations
 # 1 = reads maps to 4-9 locations
 # 0 = reads maps to 10 or more locations
+function __rnaseq_STAR {
+  base=$(pwd)
+  [[ -d bam ]] || mkdir bam
+  [[ -d pbs ]] || mkdir pbs
+  cmd='
+set -xe
+cd '$base'
+mkdir '$base'/bam/'$sname'
+~/software/STAR/default/bin/Linux_x86_64/STAR --runThreadN '$ppn' --genomeDir '$WZSEQ_STAR_INDEX' --readFilesIn '$fq1' '$fq2' --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --outFileNamePrefix bam/'$sname' --outBAMsortingThreadN '$ppn_sort'
+cd bam
+ln -s bam/'$sname'/'${sname}'Aligned.sortedByCoord.out.bam bam/'$sname'.bam
+samtools index bam/'$sname'.bam
+samtools flagstat bam/'$sname'.bam >bam/'$sname'.bam.flagstat
+'
+  jobname="STAR_$sname"
+}
+
 function rnaseq_STAR {
 
   base=$(pwd)

@@ -135,11 +135,9 @@ function __wgbs_biscuit_align_PE_Walid_lib {
   cmd='
 cd '$base'
 mkdir -p bam
-# ~/tools/biscuit/master/biscuit/biscuit
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -b 1 -t '$ppn' -J AGATCGGAAGAGC -K AGATCGGAAGAGC '$fastq1' '$fastq2' >'$output_bam'.sam
-samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam' '$output_bam'.sam
-#samtools index '$output_bam';
-#samtools flagstat '$output_bam' > '$output_bam'.flagstat
+~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' -J AGATCGGAAGAGC -K AGATCGGAAGAGC '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam | ~/bin/biscuit bsconv -m 10 '$WZSEQ_REFERENCE' - '$output_bam'
+samtools index '$output_bam';
+samtools flagstat '$output_bam' > '$output_bam'.flagstat
 '
   jobname="biscuit_align_"${sname}"_PE_both"
 }
@@ -636,14 +634,18 @@ pipeline_depend bamjob
 cd '$base'
 mkdir -p pileup
 ~/tools/biscuit/development/biscuit/biscuit pileup -q '$ppn' '$WZSEQ_REFERENCE' '$input_bam' >pileup/'$sname.vcf'
-bgzip pileup/'$sname.vcf'
+bgzip -f pileup/'$sname.vcf'
 tabix -p vcf pileup/'$sname.vcf.gz'
 
-~/tools/biscuit/development/biscuit/biscuit vcf2bed -k 1 -t cg pileup/'$sname.vcf.gz' | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T pileup | ~/tools/biscuit/development/biscuit/biscuit mergecg '$WZSEQ_REFERENCE' - | cut -f1-5 | gzip -c >pileup/'$sname'_cpg.bed.gz
+# ~/tools/biscuit/development/biscuit/biscuit vcf2bed -k 1 -t cg pileup/'$sname.vcf.gz' | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T pileup | ~/tools/biscuit/development/biscuit/biscuit mergecg '$WZSEQ_REFERENCE' - | cut -f1-5 | gzip -c >pileup/'$sname'_cpg.b.gz
+
+~/bin/biscuit vcf2bed -k 1 -t cg pileup/'$sname'.vcf.gz | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T pileup | ~/bin/biscuit mergecg '$WZSEQ_REFERENCE' - | bedtools intersect -a '$WZSEQ_CPGBED' -b - -sorted -loj | cut -f1-3,7,8 | bgzip -fc >pileup/'$sname'_cpg.b.gz
+tabix -p bed pileup/'$sname'_cpg.b.gz
 
 # make a bw file, arbitrarily chose cov5
 # ~/tools/biscuit/development/biscuit/biscuit vcf2bed -k 5 -t cg pileup/'$sname.vcf.gz' | LC_ALL=C sort -k1,1 -k2,2n -T pileup >pileup/'$sname'_cg_cov5.bed
-zcat pileup/'$sname'_cpg.bed.gz | awk '\''$5>=5'\'' | gzip -c >pileup/'$sname'_cpg_cov5.bed.gz
+zcat pileup/'$sname'_cpg.b.gz | awk '\''$5!="." && $5>=5'\'' | gzip -c >pileup/'$sname'_cpg_cov5.bed.gz
+# rm -f pileup/'$sname'_cpg_cov5.bed.gz
 
 zcat pileup/'$sname'_cpg_cov5.bed.gz | cut -f1-4 >pileup/'$sname'_cpg_cov5_tmp.bedg
 bedGraphToBigWig pileup/'$sname'_cpg_cov5_tmp.bedg '$WZSEQ_REFERENCE'.fai pileup/'$sname'_cpg_cov5.bw
