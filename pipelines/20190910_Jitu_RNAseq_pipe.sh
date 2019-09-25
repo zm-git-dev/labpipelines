@@ -43,7 +43,8 @@ source ~/wzlib/bash/wzseq.sh
 allbams="bam/*.bam"
 # stranded="-s 1"
 pairEnd="-P"
-depend="-W depend=afterok:$all_aln_jobs"
+hour=48; memG=200; ppn=28; queue=shortq
+# depend="-W depend=afterok:$all_aln_jobs"
 echo $depend
 pipeline_eval 4 __rnaseq_featureCounts
 

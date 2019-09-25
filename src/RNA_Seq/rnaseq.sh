@@ -537,26 +537,24 @@ function __rnaseq_featureCounts {
   # -M allow multi-mapping
   # -F SAF or GTF, format of annotation file
 
-  cmd="
+  cmd='
 set -xe
-cd $base
+cd '$base'
 mkdir -p featureCounts
 
 # count genes
-$prog $pairEnd $stranded -T 5 -t exon -g gene_id -a $WZSEQ_GTF_ENSEMBL_UCSCNAMING -o featureCounts/genes.tsv $allbams --primary -Q 20 --ignoreDup
+~/tools/subread/default/bin/featureCounts '$pairEnd' '$stranded' -T 5 -t exon -g gene_id -a '$WZSEQ_GTF_ENSEMBL_UCSCNAMING' -o featureCounts/genes.tsv '$allbams' --primary -Q 20 --ignoreDup
 
-~/wzlib/pyutils/wzseqtk.py cnt2rpkm -i featureCounts/genes.tsv | ~/wzlib/pyutils/wzseqtk.py ensembl2name --gene -g $WZSEQ_GTF_ENSEMBL_UCSCNAMING -H >featureCounts/genes.rpkm.tsv
+~/wzlib/pyutils/wzseqtk.py cnt2rpkm -i featureCounts/genes.tsv | ~/wzlib/pyutils/wzseqtk.py ensembl2name --gene -g '$WZSEQ_GTF_ENSEMBL_UCSCNAMING' -H >featureCounts/genes.rpkm.tsv
 
 # count repeat loci, -f suppresses meta-feature counts
-$prog $pairEnd $stranded -T 5 -t exon -g gene_id -f -a $WZSEQ_RMSK_GTF -o featureCounts/rmsk_loci.tsv $allbams --primary -Q 20 --ignoreDup
+~/tools/subread/default/bin/featureCounts '$pairEnd' '$stranded' -T 5 -t exon -g gene_id -f -a '$WZSEQ_RMSK_GTF' -o featureCounts/rmsk_loci.tsv '$allbams' --primary -Q 20 --ignoreDup
 
 ~/wzlib/pyutils/wzseqtk.py cnt2rpkm -i featureCounts/rmsk_loci.tsv >featureCounts/rmsk_loci.rpkm.tsv
 
-awk -f wanding.awk -e 'NR==FNR{\$2+=1; a[\$1\":\"\$2\"-\"\$3]=joinr(4,NF)}NR!=FNR{if(\$1==\"ID\") print \"strand\tfam1\tfam2\tfam3\t\"\$0; else {ak=\$2\":\"\$3\"-\"\$4; print a[ak],\$0;}}' $WZSEQ_RMSK featureCounts/rmsk_loci.rpkm.tsv >featureCounts/rmsk_loci.rpkm.fam.tsv
-"
+awk -f wanding.awk -e '"'"'NR==FNR{$2+=1; a[$1":"$2"-"$3]=joinr(4,NF)}NR!=FNR{if($1=="ID") print "strand\tfam1\tfam2\tfam3\t"$0; else {ak=$2":"$3"-"$4; print a[ak]"\t"$0;}}'"'"' '$WZSEQ_RMSK' featureCounts/rmsk_loci.rpkm.tsv >featureCounts/rmsk_loci.rpkm.fam.tsv'
+
   jobname="featurecounts_"$(basename $base)
-  pbsfn=$base/pbs/$jobname.pbs
-  pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour 24 -memG 10 -ppn 5
 }
 
 # R-based methods

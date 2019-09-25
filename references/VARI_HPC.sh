@@ -144,6 +144,7 @@ function wzref_hg38 {
   export WZSEQ_BISMARK_BT2_INDEX=/home/wanding.zhou/references/hg38/bismark_bt2
   export WZSEQ_BISCUIT_INDEX=/primary/vari/genomicdata/genomes/hg38/biscuit/hg38.fa
   export WZSEQ_BISCUIT_QC_SETUP=/home/wanding.zhou/tools/biscuit/development/biscuit/test_shen/QC_assets/hg38_QC_assets/setup.sh
+  export WZSEQ_GTF_ENSEMBL_UCSCNAMING=/primary/vari/genomicdata/genomes/hg38/annotation/gencode.v28.annotation.gtf
   # export WZSEQ_SUBREAD_INDEX=/primary/vari/genomicdata/genomes/hg19/subread/hg19
   # export WZSEQ_REFERENCE_SPLIT=/primary/vari/genomicdata/genomes/hg19/tophat/Homo_sapiens/UCSC/hg19/Sequence/Chromosomes
 
@@ -154,6 +155,7 @@ function wzref_hg38 {
 
   # rmsk
   # export WZSEQ_RMSK=/primary/vari/genomicdata/genomes/hg19/annotation/rmsk/rmsk.txt.bed
+  export WZSEQ_RMSK_GTF=/primary/vari/genomicdata/genomes/hg38/annotation/rmsk/rmsk_hg38.gtf
 }
 
 ###### human hg19 rCRS ####
