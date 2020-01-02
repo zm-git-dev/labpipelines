@@ -93,7 +93,7 @@ while read sname; do
   
 done << EOM
 MCF7
-MCF7_Cunha
+# MCF7_Cunha
 EOM
 
 

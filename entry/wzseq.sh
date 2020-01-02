@@ -85,7 +85,7 @@ function pipeline_eval {
     ## whether to submit
     if $pipeline_submit; then
       jobid=$(qsub $depend $pbsfn)
-      jobid=`date "+%Y-%m-%d_%H-%M-%S"`
+      # jobid=`date "+%Y-%m-%d_%H-%M-%S"`
       echo "depend: " $depend
       echo "submitted jobid: " $jobid
       echo
