@@ -3,13 +3,13 @@ wzref_hg38
 pipeline_prepare
 
 # cd ~/zhoulab/20200101_TCGA_WGBS
-# pbsgen one 'module load python/2.7; cd ~/zhoulab/20200101_TCGA_WGBS; gdc-client download -t ~/tools/gdc-client/tokens/gdc-user-token.2020-01-01T23_57_36-05_00.txt -n 2 -m gdc_manifest.2020-01-02_TCGA.txt' -submit
+# pbsgen one 'module load python/2.7; cd ~/zhoulab/20200101_TCGA_WGBS; gdc-client download -t ~/tools/gdc-client/tokens/gdc-user-token.2020-01-01T23_57_36-05_00.txt -n 24 -m gdc_manifest.2020-01-02_TCGA.txt' -submit -ppn 24 -name download
 
 while read sname sourcebams; do
 
   jump_comments
 
-  hour=48; memG=20; ppn=2; queue="default"
+  hour=48; memG=20; ppn=2; queue=all.q
   pipeline_depend none
   pipeline_eval 1 __wzseq_bam2fastq
 
@@ -18,19 +18,19 @@ while read sname sourcebams; do
   fastq1=fastq/${sname}.pe1.fq.gz
   fastq2=fastq/${sname}.pe2.fq.gz
   output_bam=bam/${sname}.bam
-  hour=100; memG=200; ppn=28; queue="longq"
+  hour=100; memG=200; ppn=28; queue=all.q
   pipeline_depend none
   pipeline_eval 11 __wgbs_biscuit_align_PE
   bam=bam/${sname}.bam
-  hour=10; memG=5; ppn=1; queue=longq
+  hour=10; memG=5; ppn=1; queue=all.q
   pipeline_eval 12 __wzseq_index_bam
 
   input_bam=bam/${sname}.bam
   output_bam=bam/${sname}_markdup.bam
-  hour=36; memG=10; ppn=2; queue=longq
+  hour=36; memG=10; ppn=2; queue=all.q
   pipeline_eval 13 __wgbs_biscuit_markdup
   bam=bam/${sname}_markdup.bam
-  hour=10; memG=5; ppn=1; queue=longq
+  hour=10; memG=5; ppn=1; queue=all.q
   pipeline_eval 14 __wzseq_index_bam
 
   ## pileup
@@ -42,12 +42,12 @@ while read sname sourcebams; do
 
   input_bam=bam/${sname}_markdup.bam
   input_vcf=pileup/${sname}.vcf.gz
-  hour=48; memG=20; ppn=2; queue=longq
+  hour=48; memG=20; ppn=2; queue=all.q
   pipeline_eval 16 __wgbs_biscuit_QC
 
   input_bam=bam/${sname}_markdup.bam
   output_sname=$sname
-  hour=60; memG=200; ppn=28; queue=longq
+  hour=60; memG=200; ppn=28; queue=all.q
   pipeline_depend 14
   pipeline_eval 23 __wzseq_qualimap_bamqc
   

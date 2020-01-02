@@ -84,7 +84,7 @@ function pipeline_eval {
 
     ## whether to submit
     if $pipeline_submit; then
-      jobid=$(qsub $depend $pbsfn)
+      jobid=$(qsub -terse $depend $pbsfn)
       # jobid=`date "+%Y-%m-%d_%H-%M-%S"`
       echo "depend: " $depend
       echo "submitted jobid: " $jobid
@@ -135,9 +135,10 @@ function pipeline_dependlevel {
 ##############################################
 # source the files under references/ and src/
 ##############################################
-for fn in ${BASH_SOURCE%/*}/../references/*.sh; do
-  source $fn;
-done
+source ${BASH_SOURCE%/*}/../references/CHOP_HPC.sh
+# for fn in ${BASH_SOURCE%/*}/../references/*.sh; do
+#   source $fn;
+# done
 
 for fn in ${BASH_SOURCE%/*}/../src/**/*.sh; do
   source $fn;

@@ -17,15 +17,23 @@ pipeline_prepare
 while read sname; do
   jump_comments
 
-  ### QC fastq ####
-  input_fastq1=fastq/${sname}_1.fastq.gz
-  input_fastq2=fastq/${sname}_2.fastq.gz
-  output_fastq1=fastq/${sname}_1_trimmomatic.fastq.gz
-  output_fastq2=fastq/${sname}_2_trimmomatic.fastq.gz
-  hour=48; memG=10; ppn=10; queue=all.q
-  pipeline_depend none
-  pipeline_eval 1 __wzseq_trimmomatic_PE
+  # ### QC fastq ####
+  # input_fastq1=fastq/${sname}_1.fastq.gz
+  # input_fastq2=fastq/${sname}_2.fastq.gz
+  # output_fastq1=fastq/${sname}_1_trimmomatic.fastq.gz
+  # output_fastq2=fastq/${sname}_2_trimmomatic.fastq.gz
+  # hour=48; memG=10; ppn=10; queue=all.q
+  # pipeline_depend none
+  # pipeline_eval 1 __wzseq_trimmomatic_PE
 
+  ### QC fastq ####
+  pipeline_depend none
+  fastq1=fastq/${sname}_1.fastq.gz
+  fastq2=fastq/${sname}_2.fastq.gz
+  trim_galore_dir=fastq_trim_galore/$sname/
+  ppn=2; queue=all.q
+  pipeline_eval 1 __wzseq_trim_galore_PE2
+  
   fastq=fastq/${sname}_R1_001.fastq.gz
   fastq_sname=${sname}_R1
   hour=12; memG=5; ppn=1; queue=all.q
@@ -92,8 +100,9 @@ while read sname; do
   pipeline_eval 52 __wzseq_qualimap_bamqc
   
 done << EOM
-MCF7
+# MCF7
 # MCF7_Cunha
+MCF7_Cunha10k
 EOM
 
 

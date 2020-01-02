@@ -155,7 +155,7 @@ def main_one(args):
         sys.stderr.write('ppn: %d\n' % job.ppn)
         sys.stderr.write('==================\n\n')
     if args.submit:
-        subprocess.check_call(['qsub', pbsfn])
+        subprocess.check_call(['qsub', '-terse', pbsfn])
 
 def main_batch(args):
 
