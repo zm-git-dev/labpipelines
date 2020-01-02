@@ -80,17 +80,19 @@ function pipeline_eval {
 
     $2
     pbsfn=$base/pbs/${jobname}.pbs
-    pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue
+    pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -workd $(pwd)
 
     ## whether to submit
     if $pipeline_submit; then
       jobid=$(qsub $depend $pbsfn)
+      jobid=`date "+%Y-%m-%d_%H-%M-%S"`
       echo "depend: " $depend
       echo "submitted jobid: " $jobid
       echo
 
       # by default, let next job depend on this one.
-      depend="-W depend=afterok:$jobid"
+      # depend="-W depend=afterok:$jobid"
+      depend="-hold_jid $jobid"
 
       # collect job id
       submitted_jobids[$pipeline_component]=$jobid

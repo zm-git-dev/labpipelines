@@ -16,11 +16,12 @@ template="""
 #$ -q {self.queue}
 #$ -l m_mem_free={self.memG}G
 #$ -l h_vmem={self.memG}G
-### time is not used in UGE
-###$ -l time={self.time}:00:00
 #$ -V
 #$ -wd {self.workd}
 #$ -pe smp {self.ppn}
+
+### time is not used in UGE
+###$ -l time={self.time}:00:00
 
 {self.depend}
 
@@ -44,7 +45,7 @@ class Job():
         self.queue      = args.queue
         self.workd      = args.workd
         if args.depend:
-            self.depend = '#PBS -W depend=afterany:{%s}' % args.depend
+            self.depend = '#$ -hold_jid %s' % args.depend
         else:
             self.depend = ''
 
