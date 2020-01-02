@@ -2,6 +2,9 @@ source $WZSEQ_ENTRY
 wzref_hg38
 pipeline_prepare
 
+# cd ~/zhoulab/20200101_TCGA_WGBS
+# pbsgen one 'module load python/2.7; cd ~/zhoulab/20200101_TCGA_WGBS; gdc-client download -t ~/tools/gdc-client/tokens/gdc-user-token.2020-01-01T23_57_36-05_00.txt -n 2 -m gdc_manifest.2020-01-02_TCGA.txt' -submit
+
 while read sname sourcebams; do
 
   jump_comments

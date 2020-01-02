@@ -8,7 +8,7 @@ shopt -s expand_aliases
 # shopt -s expand_aliases
 
 # customize this to suit the computing environment (queues etc)
-alias pbsgen=${BASH_SOURCE%/*}/../pbsgen/pbsgen_vaihpc.py
+alias pbsgen=${BASH_SOURCE%/*}/../pbsgen/pbsgen_respublica.py
 
 #########################
 ## Usage
