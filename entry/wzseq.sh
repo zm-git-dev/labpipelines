@@ -118,7 +118,8 @@ function pipeline_depend {
   if [[ -z ${submitted_jobids[$depended_component]} ]]; then
     depend=""
   else
-    depend="-W depend=afterok:"${submitted_jobids[$depended_component]}
+    depend="-hold_jid $jobid"
+    # "-W depend=afterok:"${submitted_jobids[$depended_component]}
   fi
 }
 

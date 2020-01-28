@@ -26,6 +26,7 @@ template="""
 {self.depend}
 
 set -xe
+
 {self.commands}
         
 """
@@ -274,7 +275,7 @@ class Default:
         self.stderrdir = '%s/stderr/' % self.pbsdir
         self.hour = 96
         self.ppn = 1
-        self.memG = 2
+        self.memG = 5
         self.workd = '/home/zhouw3/'
 
 if __name__ == "__main__":

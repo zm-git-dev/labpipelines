@@ -9,7 +9,7 @@
 ##########
 ###### mouse mm10 #####
 function wzref_mm10 {
-  refbase=/mnt/isilon/zhoulab/20191221_references
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=mm10
   export WZSEQ_REFERENCE=$refbase/mm10/mm10.fa
   export WZSEQ_REFERENCE_SIZE=2785373478
@@ -69,7 +69,7 @@ function wzref_mm10 {
 
 ###### human hg19 ####
 function wzref_hg19 {
-  refbase=/mnt/isilon/zhoulab/20191221_references
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=hg19
   export WZSEQ_REFERENCE=$refbase/hg19/hg19.fa
   export WZSEQ_REFERENCE_SIZE=3199901561
@@ -104,11 +104,11 @@ function wzref_hg19 {
   # WGBS
   export WZSEQ_BISCUIT_INDEX=$refbase/hg19/biscuit/hg19.fa
   export WZSEQ_BSMAP_INDEX=$refbase/hg19/bsmap/hg19.fa
-  export WZSEQ_CPGBED=$refbase/hg19/annotation/cpg.bed
+  export WZSEQ_CPGBED=$refbase/hg19/annotation/cpg/cpg.bed.gz
   export WZSEQ_CGIBED=$refbase/hg19/annotation/cpgisland/cpgIslandExt.bed
   export WZSEQ_TSSBED=$refbase/hg19/annotation/hg19.refseq.tss.bed
   export WZSEQ_MACS_SHORT=hs
-  export WZSEQ_BISCUIT_QC_SETUP=/home/zhouw3/tools/biscuit/development/biscuit/test_shen/QC_assets/hg19_QC_assets/setup.sh
+  export WZSEQ_BISCUIT_QC_ASSETS=$refbase/hg19/biscuit/QC_assets
 
   # rmsk
   export WZSEQ_RMSK=$refbase/hg19/annotation/rmsk/rmsk.txt.bed
@@ -120,7 +120,7 @@ function wzref_hg19 {
 
 ###### human hg19_noContig ####
 function wzref_hg19_noContig {
-  refbase=/mnt/isilon/zhoulab/20191221_references
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=hg19
   export WZSEQ_REFERENCE=$refbase/hg19_noContig/hg19_noContig.fa
 
@@ -134,7 +134,7 @@ function wzref_hg19_noContig {
 
 
 function wzref_hg38 {
-  refbase=/mnt/isilon/zhoulab/20191221_references
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=hg38
   export WZSEQ_REFERENCE=$refbase/hg38/hg38.fa
   # export WZSEQ_REFERENCE_SIZE=3199901561
@@ -152,11 +152,12 @@ function wzref_hg38 {
   export WZSEQ_GTF_ENSEMBL_UCSCNAMING=$refbase/hg38/annotation/gencode.v28.annotation.gtf
   # export WZSEQ_SUBREAD_INDEX=$refbase/hg19/subread/hg19
   # export WZSEQ_REFERENCE_SPLIT=$refbase/hg19/tophat/Homo_sapiens/UCSC/hg19/Sequence/Chromosomes
-
+  
   # WGBS
   # export WZSEQ_BISCUIT_INDEX=$refbase/hg19/biscuit/hg19.fa
   # export WZSEQ_CGIBED=$refbase/hg19/annotation/cpgisland/cpgIslandExt.bed
   # export WZSEQ_MACS_SHORT=hs
+  export WZSEQ_CPGBED=$refbase/hg38/annotation/cpg/cpg_noDecoy.bed.gz
 
   # rmsk
   # export WZSEQ_RMSK=$refbase/hg19/annotation/rmsk/rmsk.txt.bed
@@ -165,7 +166,7 @@ function wzref_hg38 {
 
 ###### human hg19 rCRS ####
 function wzref_hg19rCRS {
-  refbase=/mnt/isilon/zhoulab/20191221_references
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=hg19
   export WZSEQ_REFERENCE=$refbase/hg19-rCRS/hg19_rCRS.fa
   export WZSEQ_DBSNP=$refbase/hg19-rCRS/dbsnp_137.hg19.vcf

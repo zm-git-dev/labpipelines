@@ -16,6 +16,7 @@ set -xe
 # group reads by read names, collate is faster than sort
 cd '$base';
 mkdir -p bam/collate;
+mkdir -p fastq
 i=1;
 
 rm -f fastq/'$sname'.pe1.fq.gz

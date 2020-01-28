@@ -34,28 +34,30 @@ while read sname; do
   ppn=2; queue=all.q
   pipeline_eval 1 __wzseq_trim_galore_PE2
   
-  fastq=fastq/${sname}_R1_001.fastq.gz
+  fastq=fastq_trim_galore/${sname}/${sname}_1_val_1.fq.gz
   fastq_sname=${sname}_R1
-  hour=12; memG=5; ppn=1; queue=all.q
+  ppn=1; queue=all.q
   pipeline_depend none
   pipeline_eval 2 __wzseq_fastqc
 
-  fastq=fastq/${sname}_R2_001.fastq.gz
+  fastq=fastq_trim_galore/${sname}/${sname}_2_val_2.fq.gz
   fastq_sname=${sname}_R2
-  hour=12; memG=5; ppn=1; queue=all.q
+  ppn=1; queue=all.q
   pipeline_depend none
   pipeline_eval 3 __wzseq_fastqc
 
   ## alignment
   pipeline_depend none
-  fastq1=fastq/${sname}_1.fastq.gz
-  fastq2=fastq/${sname}_2.fastq.gz
+  # fastq1=fastq/${sname}_1.fastq.gz
+  # fastq2=fastq/${sname}_2.fastq.gz
+  fastq1=fastq_trim_galore/${sname}/${sname}_1_val_1.fq.gz
+  fastq2=fastq_trim_galore/${sname}/${sname}_2_val_2.fq.gz
   output_bam=bam/${sname}.bam
-  hour=48; memG=5; ppn=24; queue=all.q
+  ppn=12; queue=all.q
   pipeline_depend none
   pipeline_eval 11 __wgbs_biscuit_align_PE
   bam=bam/${sname}.bam
-  hour=1; memG=5; ppn=1
+  ppn=1
   pipeline_eval 12 __wzseq_index_bam
 
   input_bam=bam/${sname}.bam
@@ -69,7 +71,7 @@ while read sname; do
   ## pileup
   input_bam=bam/${sname}_markdup.bam
   output_vcf=pileup/${sname}.vcf.gz
-  hour=12; memG=80; ppn=20; queue=all.q
+  ppn=12; queue=all.q
   pipeline_depend 14
   pipeline_eval 15 __wgbs_biscuit_pileup
 

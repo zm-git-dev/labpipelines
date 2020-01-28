@@ -7,11 +7,11 @@ def set_queue(job):
 
 default = Default()
 default.pbsdir = '/mnt/isilon/zhoulab/tmp/pbs'
-default.scriptdir = '%s/pbs/' % default.pbsdir
-default.stdoutdir = '%s/stdout/' % default.pbsdir
-default.stderrdir = '%s/stderr/' % default.pbsdir
+default.scriptdir = default.pbsdir
+default.stdoutdir = default.pbsdir
+default.stderrdir = default.pbsdir
 default.hour = 12
 default.ppn = 1
-default.memG = 2
+default.memG = 5
 
 pbsgen_main(default, set_queue)

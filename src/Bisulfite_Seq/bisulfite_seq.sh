@@ -169,7 +169,7 @@ ln -sf `readlink -f '$output_bam'_markdup_report.txt` multiqc/raw/biscuit/
 function __wgbs_biscuit_QC {
   cmd='
 cd '$base'
-~/tools/biscuit/development/biscuit/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_SETUP' '$sname' '$input_bam'
+~/repo/biscuit/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_ASSETS' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
 mkdir -p multiqc/raw/BISCUITqc/'$sname'
 ln -sf `readlink -f BISCUITqc` multiqc/raw/BISCUITqc
 '
@@ -648,7 +648,7 @@ zcat pileup/'$sname'_cpg.b.gz | awk '\''$5!="." && $5>=5'\'' | gzip -c >pileup/'
 # rm -f pileup/'$sname'_cpg_cov5.bed.gz
 
 zcat pileup/'$sname'_cpg_cov5.bed.gz | cut -f1-4 >pileup/'$sname'_cpg_cov5_tmp.bedg
-bedGraphToBigWig pileup/'$sname'_cpg_cov5_tmp.bedg '$WZSEQ_REFERENCE'.fai pileup/'$sname'_cpg_cov5.bw
+[[ -s pileup/'$sname'_cpg_cov5_tmp.bedg ]] && bedGraphToBigWig pileup/'$sname'_cpg_cov5_tmp.bedg '$WZSEQ_REFERENCE'.fai pileup/'$sname'_cpg_cov5.bw
 rm -f pileup/'$sname'_cpg_cov5_tmp.bedg
 '
   jobname="biscuit_pileup_"$sname
