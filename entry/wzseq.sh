@@ -63,7 +63,7 @@ level_jobids=()
 # echo "select:" $pipeline_select
 
 # pipeline_submit=false
-hour=24; memG=10; ppn=1; queue=default
+hour=24; memG=10; ppn=1; queue=all.q
 EOF
 )
 
