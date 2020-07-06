@@ -3,7 +3,8 @@
 source ~/wzlib/bash/wzseq.sh
 pipeline_prepare
 
-cd /secondary/projects/zhang/projects/2017_04_13_methylation_evolution/Qu_2018_GenomeRes
+# cd /secondary/projects/zhang/projects/2017_04_13_methylation_evolution/Qu_2018_GenomeRes
+cd ~/zhoulab/labprojects/20180115_methylome_evolution
 while read sname srr_ids species; do
   jump_comments
   srr_ids=${srr_ids//,/ };
