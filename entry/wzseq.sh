@@ -80,7 +80,7 @@ function pipeline_eval {
 
     $2
     pbsfn=$base/pbs/${jobname}.pbs
-    pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -workd $(pwd)
+    pbsgen "$cmd" -name $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -workd $(pwd)
 
     ## whether to submit
     if $pipeline_submit; then
