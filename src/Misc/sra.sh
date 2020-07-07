@@ -24,6 +24,24 @@ done
   jobname="fasterqdump_"$sname
 }
 
+function __sra_fasterq_dump_SE_20200706 {
+  cmd='
+set -xe
+mkdir -p '$base'/fastq
+cd '$base'/fastq
+rm -f '${sname}'_R1.fastq.gz '${sname}'_R2.fastq.gz
+for f in '$srr_ids'; do
+
+  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/prefetch --resume yes --max-size 1T -O sra/ ${f}
+  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/fasterq-dump --temp sra/${f} --split-3 --split-files sra/${f}.sra
+  
+  pigz -p '$ppn' -c ${f}.sra.fastq >>'${sname}'_R1.fastq.gz
+  # rm -f ${f}.sra.fastq sra/${f}.sra
+done
+'
+  jobname="fasterqdump_"$sname
+}
+
 function __wzseq_fastq_dump_SE {
   # input: base, sname, srr_ids
   cmd='

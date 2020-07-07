@@ -8,8 +8,8 @@ jump_comments
 
 srr_ids=${srr_ids//,/ };
 pipeline_dependlevel
-memG=20; ppn=4;
-pipeline_eval 1 __sra_fasterq_dump_PE_20200706;
+memG=20; ppn=1;
+pipeline_eval 1 __sra_fasterq_dump_SE_20200706;
 
 done <<EOF
 SRR6519360      E9.5_PGC_DNase-seq
