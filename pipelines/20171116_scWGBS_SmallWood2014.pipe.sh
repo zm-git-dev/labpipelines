@@ -8,8 +8,8 @@ while read sname pe_or_se srr_ids; do
   jump_comments
   srr_ids=${srr_ids//,/ };
   pipeline_dependlevel
-  hour=48; memG=10; ppn=5
-  pipeline_eval 1 __wzseq_fastq_dump_PE
+  memG=20; ppn=5
+  pipeline_eval 1 __sra_fasterq_dump_PE_20200706
 done << EOM
 MII_ovulated_oocytes_GSM1370522 PE      SRR1248444
 MII_ovulated_oocytes_GSM1370523 PE      SRR1248445

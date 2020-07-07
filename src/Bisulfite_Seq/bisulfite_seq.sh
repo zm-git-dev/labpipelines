@@ -95,7 +95,7 @@ function __wgbs_biscuit_align_SE {
   cmd='
 cd '$base'
 mkdir -p bam
-~/bin/biscuit align -b 3 '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
+biscuit align -b 3 '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
 '
   jobname="biscuit_align_"$sname"_SE"
 }
@@ -104,26 +104,37 @@ function __wgbs_biscuit_align_SE_both {
   cmd='
 cd '$base'
 mkdir -p bam
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
 '
   jobname="biscuit_align_"$sname"_SE"
 }
 
+## standard stranded library
 function __wgbs_biscuit_align_PE {
   cmd='
 cd '$base'
 mkdir -p bam
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -b 1 -t '$ppn' '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
+biscuit align '$WZSEQ_BISCUIT_INDEX' -b 1 -t '$ppn' '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
 '
   jobname="biscuit_align_"$sname"_PE"
 }
 
+## both strand, single-cell, PBAT library, TruSeq library
 function __wgbs_biscuit_align_PE_both {
   cmd='
 cd '$base'
 mkdir -p bam
-# ~/tools/biscuit/master/biscuit/biscuit
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq1' '$fastq2' >'$output_bam'.sam
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
+'
+  jobname="biscuit_align_"${sname}"_PE_both"
+}
+
+## above but explicitly save intermediate files
+function __wgbs_biscuit_align_PE_both_split {
+  cmd='
+cd '$base'
+mkdir -p bam
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq1' '$fastq2' >'$output_bam'.sam
 samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam' '$output_bam'.sam
 #samtools index '$output_bam';
 #samtools flagstat '$output_bam' > '$output_bam'.flagstat
@@ -135,7 +146,7 @@ function __wgbs_biscuit_align_PE_Walid_lib {
   cmd='
 cd '$base'
 mkdir -p bam
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' -J AGATCGGAAGAGC -K AGATCGGAAGAGC '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam | ~/bin/biscuit bsconv -m 10 '$WZSEQ_REFERENCE' - '$output_bam'
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' -J AGATCGGAAGAGC -K AGATCGGAAGAGC '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam | ~/bin/biscuit bsconv -m 10 '$WZSEQ_REFERENCE' - '$output_bam'
 samtools index '$output_bam';
 samtools flagstat '$output_bam' > '$output_bam'.flagstat
 '
@@ -146,7 +157,7 @@ function __wgbs_biscuit_align_PE_POETIC {
   cmd='
 cd '$base'
 mkdir -p bam
-~/bin/biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' -J AGATCGGAAGAGC -K AAATCAAAAAAAC '$fastq1' '$fastq2' >'$output_bam'.sam
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' -J AGATCGGAAGAGC -K AAATCAAAAAAAC '$fastq1' '$fastq2' >'$output_bam'.sam
 samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam' '$output_bam'.sam
 # samtools index '$output_bam';
 # samtools flagstat '$output_bam' > '$output_bam'.flagstat
@@ -157,7 +168,7 @@ samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam' '$output_bam'.sam
 function __wgbs_biscuit_markdup {
   cmd='
 cd '$base'
-~/tools/biscuit/development/biscuit/biscuit markdup '$input_bam' '$output_bam'_unsrt.bam 2>'$output_bam'_markdup_report.txt
+biscuit markdup '$input_bam' '$output_bam'_unsrt.bam 2>'$output_bam'_markdup_report.txt
 samtools sort -T '$output_bam'_unsrt.tmp -o '$output_bam' '$output_bam'_unsrt.bam
 rm -f '$output_bam'_unsrt.bam
 mkdir -p multiqc/raw/biscuit/
@@ -169,7 +180,7 @@ ln -sf `readlink -f '$output_bam'_markdup_report.txt` multiqc/raw/biscuit/
 function __wgbs_biscuit_QC {
   cmd='
 cd '$base'
-~/repo/biscuit/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_ASSETS' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
+/mnt/isilon/zhoulab/labsoftware/biscuit/production/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_ASSETS' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
 mkdir -p multiqc/raw/BISCUITqc/'$sname'
 ln -sf `readlink -f BISCUITqc` multiqc/raw/BISCUITqc
 '

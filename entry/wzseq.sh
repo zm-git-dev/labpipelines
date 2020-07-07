@@ -78,6 +78,7 @@ function pipeline_eval {
     echo "select:" $pipeline_select
     echo "component:" $pipeline_component
 
+    ## jobname is defined in each function
     $2
     pbsfn=$base/pbs/${jobname}.pbs
     pbsgen "$cmd" -name $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -workd $(pwd)

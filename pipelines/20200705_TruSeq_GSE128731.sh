@@ -8,8 +8,8 @@ jump_comments
 
 srr_ids=${srr_ids//,/ };
 pipeline_dependlevel
-hour=48; memG=10; ppn=1;
-pipeline_eval 1 __wzseq_fastq_dump_PE;
+memG=20; ppn=4;
+pipeline_eval 1 __sra_fasterq_dump_PE_20200706;
 
 done <<EOF
 whole_blood_GSM3683954  SRR9888304
