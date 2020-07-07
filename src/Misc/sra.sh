@@ -18,7 +18,10 @@ for f in '$srr_ids'; do
   
   pigz -p '$ppn' -c ${f}.sra_1.fastq >>'${sname}'_R1.fastq.gz
   [[ -e ${f}.sra_2.fastq ]] && pigz -p '$ppn' -c ${f}.sra_2.fastq >>'${sname}'_R2.fastq.gz
-  # rm -f ${f}.sra_1.fastq ${f}.sra_2.fastq sra/${f}.sra
+
+  # cleaning, delete .fastq only in case .sra needs to be used later
+  rm -f ${f}.sra_1.fastq ${f}.sra_2.fastq
+  # rm -f sra/${f}.sra
 done
 '
   jobname="fasterqdump_"$sname
@@ -36,7 +39,10 @@ for f in '$srr_ids'; do
   /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/fasterq-dump --force --temp sra/${f} --split-3 --split-files sra/${f}.sra
   
   pigz -p '$ppn' -c ${f}.sra.fastq >>'${sname}'_R1.fastq.gz
-  # rm -f ${f}.sra.fastq sra/${f}.sra
+
+  # cleaning, delete .fastq only in case .sra needs to be used later
+  rm -f ${f}.sra.fastq 
+  # rm -f sra/${f}.sra
 done
 '
   jobname="fasterqdump_"$sname
