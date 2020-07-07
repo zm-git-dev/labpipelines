@@ -2,6 +2,9 @@
 ## SRA-toolkits
 #################
 
+## I have spent a lot of time finagling with fastq-dump but it gave me the timeout error randomly.
+## I think this issue is specific to respublica.
+## Please use the following (prefetch + fasterq-dump)
 function __sra_fasterq_dump_PE_20200706 {
   cmd='
 set -xe
