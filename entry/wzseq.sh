@@ -74,6 +74,8 @@ EOF
 )
 
 alias pipeline_prepare='eval "$_pipeline_prepare"'
+
+## the following requires sname to be in the first column, not always the case
 alias jump_comments='sname_re="^#"; [[ "$sname" =~ $sname_re ]] && continue; depend="";'
 
 ## define pipeline_select and pipeline_submit
