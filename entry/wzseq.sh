@@ -1,5 +1,5 @@
 #!/bin/bash
-shopt -s extglob
+shopt -s extglob #this is for pattern matching, such as BASH_REMATCH
 shopt -s expand_aliases
 # Remarks:
 # pbsgen one "$cmds" -name $jobname -dest $pbsdir/$jobname $depend
@@ -8,7 +8,7 @@ shopt -s expand_aliases
 # shopt -s expand_aliases
 
 # customize this to suit the computing environment (queues etc)
-alias pbsgen=${BASH_SOURCE%/*}/../pbsgen/pbsgen_respublica.py
+alias pbsgen=${BASH_SOURCE%/*}/../pbsgen/pbsgen_respublica.py #this is a customed python script to submit job via qsub / pbs.
 
 #########################
 ## Usage
@@ -28,13 +28,19 @@ sample2
 EOM
 EOF
 }
-
+#pipeline_template is a demo, will not be used.
 ###########################################
 ## Helper functions
 ###########################################
+#_pipeline_prepare can read args and record the user selected pipeline component.
 
 _pipeline_prepare=$(cat <<'EOF'
 callargarray=("$@"); base=$(pwd); [[ -d pbs ]] || mkdir pbs; leveljobids=();
+:<<! 
+$@ get all args
+${#callargarray[@]} is the total number of args, could be replaced by $#
+!
+
 # echo ${#callargarray[@]},0
 if [[ ${#callargarray[@]} > 0 && ${callargarray[-1]} == "do" ]]; then
   pipeline_submit=true

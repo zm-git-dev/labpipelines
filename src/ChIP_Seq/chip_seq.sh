@@ -16,26 +16,18 @@ function examplepipeline_chipseq {
 EOF
 }
 
-function pipeline_20170917_chipseqPE {
-
-  pipeline_start=${!#}
-  base=$(pwd);
-  mkdir -p pbs;
-  awk '/^\[/{p=0}/\[alignment\]/{p=1;next} p&&!/^$/' samples |
-    while read sname sread1 sread2; do
-
-      pipeline_init
-
-      pipeline_eval 1 __wzseq_bwa_mem
-
-      fn=bam/${sname}.bam
-      pipeline_eval 2 __wzseq_bam_coverage
-
-#[[ ${!#} == "clean" ]] && pipeline_eval 3 __wzseq_clean_bam
-
-    done
+function __bwa_aln_se_20200716 {
+  cmd='
+cd '$base'
+mkdir -p bam
+bwa aln -t '$ppn' '$WZSEQ_BWA_INDEX' '$fastq' >bam/'${sname}'.sai
+bwa samse '$WZSEQ_BWA_INDEX' bam/'${sname}'.sai '$fastq' | samtools view -bS - | samtools sort -T '$base'/bam/'${sname}' -O bam -o bam/'${sname}'.bam
+samtools index bam/'${sname}'.bam
+samtools flagstat bam/'${sname}'.bam > bam/'${sname}'.bam.flagstat
+rm -f bam/'${sname}'.sai
+'
+  jobname="bwa_align_"$sname"_SE"
 }
-
 
 # BWA-aln single-ended
 function wzseq_bwa_aln_se {
