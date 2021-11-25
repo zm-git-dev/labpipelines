@@ -1,12 +1,103 @@
-# Pipeline Repository
+# Zhou Lab's Pipeline Repository
 
 ## Usage
 
-Just clone this repository point an environment variable __WZSEQ_ENTRY__ to your installed `repo/entry/wzseq.sh`. Then you should be able to use scripts in the __pipelines__ folder.
+Clone this repository point an environment variable __SLURM_ENTRY__ to your installed `repo/entry/slurm.sh`. Then you should be able to use scripts in the __pipelines__ folder. The modules should stay in the __modules__ folder.
+
+## Example pipelines
+
+[pipelines/20190510_Walid_scWGBS.pipe.sh](pipelines/20190510_Walid_scWGBS.pipe.sh)
+
+## Available modules
+
+Note that new module code should have the naming convension `__zlab_function_date`. Other modules noncompliant with this convention are obsolete.
+All modules must provide project base name.
+
+### BAM utilities - [src/bam.sh](src/bam.sh)
+
+```
+__zlab_PicardMarkdup_20200719
+__zlab_PicardMarkdup_20211125
+__zlab_bam2fastq_20211125
+__zlab_indexBAM_20211125
+
+```
+
+### Bisulfite-seq
+
+```
+__zlab_trimGalorePE_20211125
 
 
+```
 
-## PacBio SMRT (Single Molecule Real Time) Sequencing Preprocessing
+## Obsolete module functions
+
+```
+############
+## bam.sh ##
+############
+bam2bigwig
+__filterMAPQ_20200719
+wzseq_picard_index_fasta
+wzseq_picard_WGSmetrics
+wzseq_picard_markdup
+wzseq_merge_bam_picard
+__markDupAndFilter_20200719
+wzseq_cov5
+wzseq_cov10
+wzseq_liftbw
+wzseq_merge_fastq
+wzseq_srx2srr
+wzseq_merge_bam
+__wzseq_index_bam
+wzseq_basic_summary
+__wzseq_bam_mapq
+wzseq_bam2fastq
+__wzseq_uniformity_1M
+wzseq_bam_coverage
+wgbs_cpgcoverage_OBSOLETE
+
+#######################
+## bisulfite_seq.sh ##
+#######################
+wgbs_adaptor
+wzseq_fastqc
+wgbs_biscuit_align
+wgbs_bwameth
+wgbs_bismark_bowtie1
+wgbs_bismark_bowtie2
+wgbs_bsmap
+wgbs_biscuit_align_lambdaphage
+wgbs_biscuit_pileup_lambdaphage (TODO: exclude human reads)
+zseq_GATK_realign
+wzseq_picard_markdup 
+wzseq_clean_intermediate
+wgbs_basequal_recal
+
+wzseq_merge_bam
+wzseq_qualimap 
+wzseq_picard_WGSmetrics
+wzseq_bam_coverage
+
+wgbs_methpipe
+wgbs_methpipe_methylome
+wgbs_methpipe_allele
+
+wgbs_biscuit_pileup [-nome]
+wgbs_vcf2tracks [-nome] 
+wgbs_cpgcoverage 
+wgbs_repeat => (+) wgbs_repeat_diff
+wgbs_methylKit_summary
+wgbs_diffmeth_simple
+wgbs_methylKit_diffmeth
+wgbs_methpipe_diff 
+wgbs_metilene
+
+```
+
+## To be added
+### PacBio SMRT (Single Molecule Real Time) Sequencing Preprocessing
 
 1.  preliminary processing using SMRTlink 5.0 software (Pacific Biosciences)
 2. generate Circular consensus sequence (CCS)
@@ -19,17 +110,16 @@ Just clone this repository point an environment variable __WZSEQ_ENTRY__ to your
 9. Unmapped transcripts and novel gene transcripts were scanned and annotated by Diamond BLASTX with parameter `e value '1e-5'` in the following protein/peptide database: NR (NCBI non-redundant protein sequences), KOG/COG (Clusters of Orthologous Groups of proteins), Swiss-Prot (a manually annotated and reviewed protein sequence database), KEGG ortholog database.
 10. novel transcripts were also searched against Pfam using [Hmmscan](http://hmmer.org/download.html)
 
-## Alternative Splicing
+### Alternative Splicing
 
 1. Alternative splicing were analyzed using [SUPPA](https://github.com/comprna/SUPPA)
 
-## Coding potential
+### Coding potential
 1. [CNCI](https://github.com/www-bioinfo-org/CNCI)
 2. [PLEK](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-15-311)
 3. [COME](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5224497/)
 
-
-# Hi-C Methods
+### Hi-C
 
 1. [AFC](https://www.nature.com/articles/nature12644)
 2. [Fit-Hi-C](https://noble.gs.washington.edu/proj/fit-hi-c/)

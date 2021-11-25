@@ -83,7 +83,10 @@ alias jump_comments='sname_re="^#"; [[ "$sname" =~ $sname_re ]] && continue; dep
 ## define pipeline_select and pipeline_submit
 function pipeline_eval {
   pipeline_component=$1
-  if [[ "$pipeline_select" == "all" || "$pipeline_component" == "$pipeline_select" || ( "${pipeline_select: -1}" == "+" && "$pipeline_component" -ge "${pipeline_select::-1}" ) || ($pipeline_range && $pipeline_component -ge $pipeline_range_start && $pipeline_component -le $pipeline_range_end) ]]; then
+  if [[ "$pipeline_select" == "all" ||
+          "$pipeline_component" == "$pipeline_select" ||
+          ( "${pipeline_select: -1}" == "+" && "$pipeline_component" -ge "${pipeline_select::-1}" ) ||
+          ($pipeline_range && $pipeline_component -ge $pipeline_range_start && $pipeline_component -le $pipeline_range_end) ]]; then
     echo "submit:" $pipeline_submit
     echo "select:" $pipeline_select
     echo "component:" $pipeline_component
