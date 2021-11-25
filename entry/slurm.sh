@@ -151,7 +151,7 @@ function pipeline_dependlevel {
 source ${BASH_SOURCE%/*}/../references/CHOP_HPC.sh
 
 
-find ${BASH_SOURCE%/*}/../src/ -name *.sh | while read fn; do
+for fn in ${BASH_SOURCE%/*}/../src/*.sh; do
   source $fn;
 done
 
