@@ -20,13 +20,17 @@ function __bwa_aln_se_20200716 {
   cmd='
 cd '$base'
 mkdir -p bam
-bwa aln -t '$ppn' '$WZSEQ_BWA_INDEX' '$fastq' >bam/'${sname}'.sai
-bwa samse '$WZSEQ_BWA_INDEX' bam/'${sname}'.sai '$fastq' | samtools view -bS - | samtools sort -T '$base'/bam/'${sname}' -O bam -o bam/'${sname}'.bam
-samtools index bam/'${sname}'.bam
-samtools flagstat bam/'${sname}'.bam > bam/'${sname}'.bam.flagstat
-rm -f bam/'${sname}'.sai
+if [ ! -f bam/'${sname}'.bam ]; then
+  bwa aln -t '$ppn' '$WZSEQ_BWA_INDEX' '$fastq' >bam/'${sname}'.sai
+  bwa samse '$WZSEQ_BWA_INDEX' bam/'${sname}'.sai '$fastq' | samtools view -bS - | samtools sort -T '$base'/bam/'${sname}' -O bam -o bam/'${sname}'.bam
+  samtools index bam/'${sname}'.bam
+  samtools flagstat bam/'${sname}'.bam > bam/'${sname}'.bam.flagstat
+  rm -f bam/'${sname}'.sai
+else
+  echo bam/'${sname}'.bam existed
+fi
 '
-  jobname="bwa_align_"$sname"_SE"
+  jobname="bwa_align_"${sname}"_SE"
 }
 
 # BWA-aln single-ended
@@ -160,6 +164,17 @@ mkdir -p macs2
 macs2 callpeak -t '$target_bam' -f BAM -g '$WZSEQ_MACS_SHORT' -n macs2/'$sname' -B --broad
 '
   jobname="macs2_"$sname
+}
+
+function __dnase_macs2_20200722 {
+  cmd='
+cd '$base'
+[[ -d pbs ]] || mkdir pbs
+mkdir -p macs2
+/mnt/isilon/zhoulab/labsoftware/anaconda/anaconda3_2020/bin/macs2 callpeak -t filtered_bam/'$sname'.filtered.bam -g '$WZSEQ_MACS_SHORT' -q 0.05 -n '$sname' --outdir macs2 -B
+'
+  jobname="macs2_"$sname
+
 }
 
 function __chipseq_macs2 {

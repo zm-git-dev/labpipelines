@@ -69,7 +69,7 @@ level_jobids=()
 # echo "select:" $pipeline_select
 
 # pipeline_submit=false
-hour=24; memG=10; ppn=1; queue=all.q
+hour=24; memG=10; ppn=1; queue=all.q; gpu=0;
 EOF
 )
 
@@ -89,7 +89,7 @@ function pipeline_eval {
     ## jobname is defined in each function
     $2
     pbsfn=$base/pbs/${jobname}.pbs
-    pbsgen "$cmd" -name $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -workd $(pwd)
+    pbsgen "$cmd" -name $pbsfn -hour $hour -memG $memG -ppn $ppn -queue $queue -gpu ${gpu} -workd $(pwd)
 
     ## whether to submit
     if $pipeline_submit; then

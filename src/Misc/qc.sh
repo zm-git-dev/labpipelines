@@ -16,3 +16,12 @@ ln -sf `readlink -f fastqc` multiqc/raw/fastqc/
   jobname='fastqc_'$fastq_sname
 }
 
+function __fastqc20200718 {
+  cmd='
+set -xe
+cd '$base'
+mkdir -p fastqc
+fastqc -f fastq -t 10 -o fastqc '$fastq'
+'
+  jobname='fastqc_'$sname
+}

@@ -16,6 +16,7 @@ template="""
 #$ -q {self.queue}
 #$ -l m_mem_free={self.memG}G
 #$ -l h_vmem={self.memG}G
+{self.gpu}
 #$ -V
 #$ -wd {self.workd}
 #$ -pe smp {self.ppn}
@@ -49,6 +50,11 @@ class Job():
             self.depend = '#$ -hold_jid %s' % args.depend
         else:
             self.depend = ''
+			
+        if args.gpu > 0:
+            self.gpu = '#$ -l gpu=%s' % args.gpu
+        else:
+            self.gpu = ''
 
     def next_index_auto(self):
         batch_index = 0
@@ -165,6 +171,7 @@ def add_default_settings(parser, d):
                         help="memory in G [%d]" % d.memG)
     parser.add_argument('-queue', default='all.q', help='queue to force to')
     parser.add_argument('-depend', default='', help='dependency')
+    parser.add_argument('-gpu', default=0, help='gpu',type=int)
     parser.add_argument('-silent', action='store_true', help='suppress info print')
 
 def pbsgen_main(parser, setting):
@@ -178,7 +185,6 @@ def pbsgen_main(parser, setting):
     parser.add_argument('-name', default=None, help='job name (if specified, I will ignore index), if given an absolute path, use the basename as job name, use the dirname as pbsdir')
     add_default_settings(parser, Default())
     parser.add_argument('-submit', action='store_true', help='submit pbs')
-
     args = parser.parse_args()
     main(args)
     return

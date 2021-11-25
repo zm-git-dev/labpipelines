@@ -24,3 +24,14 @@ java -jar ~/tools/trimmomatic/Trimmomatic-0.33/trimmomatic-0.33.jar PE -threads 
 }
 
 
+
+function __trim_galore20200806 {
+  cmd='
+set -xe
+cd '$base'
+mkdir -p TrimGalore
+trim_galore -o TrimGalore -j '$ppn' --clip_R1 5 fastq/'$sname'.fastq.gz
+fastqc -f fastq -t 10 -o TrimGalore TrimGalore/'$sname'_trimmed.fq.gz
+'
+  jobname='trim_galore_'$sname
+}

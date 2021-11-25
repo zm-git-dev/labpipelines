@@ -55,7 +55,7 @@ cd bam;
 [[ -h $bfn.bam ]] || [[ ! -e $bfn.bam ]] && ln -sf picard_mdup/$bfn.bam .
 [[ -h $bfn.bam.bai ]] || [[ ! -e $bfn.bam.bai ]] && ln -sf picard_mdup/$bfn.bai $bfn.bam.bai
 [[ -h $bfn.bam.flagstat ]] || [[ ! -e $bfn.bam.flagstat ]] && ln -sf picard_mdup/$bfn.bam.flagstat .
-
+<F11>
 " # other options: REMOVE_DUPLICATES=true
     jobname="picard_markdup_$bfn"
     pbsfn=$base/pbs/$jobname.pbs
@@ -63,6 +63,18 @@ cd bam;
     [[ $1 == "do" ]] && qsub $pbsfn
   done
 }
+
+function wzseq_picard_markdup2 {
+
+base=$(pwd)
+
+cd $base
+[[ -d bam/picard_mdup ]] || mkdir bam/picard_mdup
+java -Xmx10g -Djava.io.tmpdir=./tmp/ -jar ~/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates CREATE_INDEX=true ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=SILENT METRICS_FILE=bam/picard_mdup/${input}.mdup.stats READ_NAME_REGEX=null INPUT=${input} OUTPUT=bam/picard_mdup/${input} TMP_DIR=tmp
+samtools flagstat bam/picard_mdup/${input} > bam/picard_mdup/${input}.flagstat
+done
+}
+
 
 function wzseq_merge_bam_picard {
 
@@ -98,4 +110,27 @@ rm -rf bam/tmp
     done
 }
 
+function __markDupAndFilter_20200719 {
+  cmd='
+cd '$base'
+[[ -d pbs ]] || mkdir pbs
+outdir="filtered_bam"
+mkdir -p ${outdir}
+outBasename=${outdir}/'$sname'
+map_thresh=20
+if [[ ! -e ${outBasename}.markDup.bam ]]; then
+  java -jar /mnt/isilon/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
+  I='$bam' O=${outBasename}.markDup.bam METRICS_FILE=${outBasename}_dup_qc.txt\
+  ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true REMOVE_DUPLICATES=false
+fi
 
+#filter bam with given mapQ
+if [[ ! -e ${outBasename}.filtered.bam ]]; then
+  #remove reads with QCFAIL flag (512)
+  samtools view -F 512 -q ${map_thresh} -b ${outBasename}.markDup.bam > ${outBasename}.filtered.bam
+  samtools flagstat ${outBasename}.filtered.bam > ${outBasename}.filtered.bam.flagstat
+  samtools stats ${outBasename}.filtered.bam > ${outBasename}.filtered.bam.stats
+fi
+'
+  jobname="markdupAndFilter_${sname}"
+}

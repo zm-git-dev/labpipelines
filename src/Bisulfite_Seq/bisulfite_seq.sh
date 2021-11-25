@@ -56,6 +56,7 @@ rm -f bam/$bamfn
   pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour 1 -memG 1 -ppn 1
 }
 
+
 function __wzseq_clean_fastq {
 
   # input: sname, sread1, sread2
@@ -66,9 +67,53 @@ cd $base
 [[ -f fastq/$sread2 ]] && rm -f fastq/$sread2
 "
   jobname="clean_fastq_$sname"
-  pbsfn=$base/pbs/$jobname.pbs
+  pbsfn=$b__wzseq_trimmomatic_SEase/pbs/$jobname.pbs
   pbsgen one "$cmd" -name $jobname -dest $pbsfn -hour 1 -memG 1 -ppn 1
 }
+
+function __wgbs_MergeBAM {
+  cmd='
+cd '$base'/bam
+samtools merge finalBamFile.bam *.fastq.bam
+'
+  jobname="MergeBAM"
+}
+
+function __wgbs_MergeBAM2 {
+  cmd='
+cd '$base'/bam/subBAM
+samtools merge '$sub'.bam *.'$sub'.bam
+mv '$sub'.bam '$base'/bam
+':
+  jobname="MergeBAM2"
+}
+
+
+function __wgbs_cutIllumina {
+  cmd='
+cd '$base'
+~/zhoulab/labsoftware/anaconda/anaconda3_2020/bin/cutadapt -a AGATCGGAAGAG -o '$sname'.cut.fastq '$sname'
+'
+  jobname=Cut$sname
+}
+
+
+function __wzseq_trimmomatic_SE {
+  #hour=12; memG=10; ppn=10
+  cmd='
+mkdir trimmomatic
+java -jar ~/tools/trimmomatic/Trimmomatic-0.33/trimmomatic-0.33.jar SE -threads '$ppn' -phred33 '$input_fastq' '$output_fastq' ILLUMINACLIP:~/tools/trimmomatic/Trimmomatic-0.33/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 2>'$input_fastq'_trimmomatic_report
+mkdir -p multiqc/raw/trimmomatic/
+ln -sf `readlink -f '$input_fastq'_trimmomatic_report` multiqc/raw/trimmomatic/
+'
+  jobname='trimmomatic_SE_'$sname
+}
+
+
+
+
+
+
 
 
 ########################
@@ -108,6 +153,18 @@ biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$out
 '
   jobname="biscuit_align_"$sname"_SE"
 }
+
+
+
+function __wgbs_biscuit_align_SE_both2 {
+  cmd='
+cd '$base'
+mkdir -p bam/subBAM
+biscuit align '$WZSEQ_BISCUIT_INDEX' -t '$ppn' '$fastq' | samtools sort -T '$output_bam'_tmp -O bam -o '$output_bam'
+'
+  jobname="biscuit_align_"$sname"_SE"
+}
+
 
 ## standard stranded library
 function __wgbs_biscuit_align_PE {
@@ -180,7 +237,7 @@ ln -sf `readlink -f '$output_bam'_markdup_report.txt` multiqc/raw/biscuit/
 function __wgbs_biscuit_QC {
   cmd='
 cd '$base'
-/mnt/isilon/zhoulab/labsoftware/biscuit/production/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_ASSETS' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
+/mnt/isilon/zhoulab/labsoftware/biscuit/production/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_SETUP' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
 mkdir -p multiqc/raw/BISCUITqc/'$sname'
 ln -sf `readlink -f BISCUITqc` multiqc/raw/BISCUITqc
 '
@@ -276,11 +333,11 @@ function __wzseq_trim_galore_SE {
   cmd='
 set -xe
 cd '$base'
-[[ -d '$trim_galore_dir' ]] && rm -rf '$trim_galore_dir'
-mkdir -p '$trim_galore_dir'
-trim_galore --fastqc '$fastq' --gzip -o '$trim_galore_dir'
+##[[ -d '$trim_galore_dir' ]] && rm -rf '$trim_galore_dir'
+mkdir -p trim
+trim_galore --path_to_cutadapt /scr1/users/zhouw3/labsoftware/anaconda3/bin/cutadapt --fastqc '$fastq' --gzip -o trim/'$sname'
 mkdir -p multiqc/raw/trim_galore/
-ln -fs `readlink -f '$trim_galore_dir'` multiqc/raw/trim_galore/
+ln -fs `readlink -f trim'$sname'` multiqc/raw/trim_galore/
 '
   jobname="trim_galore_SE_"$sname
 }
@@ -339,7 +396,7 @@ bismark_genome_preparation --bowtie2 --verbose $WZSEQ_BISMARK_BT2_INDEX
 
 function __wgbs_bismark_bowtie2_SE {
   : '
-fastq=fastq/${sname}_trim_galore/${sname}_merged.fq.gz
+fastq=trim/${sname}
 direction="--non_directional"
 bismark_bt2_dir=bam/${sname}_bismark_bt2
 bismark_bt2_bam_unsorted=bam/${sname}_bismark_bt2/${sname}_merged.fq.gz_bismark_bt2.bam
@@ -347,7 +404,7 @@ bismark_bt2_bam_final=bam/${sname}_bismark_bt2.bam
 hour=200; memG=180; ppn=28
 '
   cmd='
-export PATH=~/tools/bismark/default:~/tools/bowtie2/default:$PATH
+export PATH=~/zhoulab/labsoftware/bismark/default:~/zhoulab/labsoftware//bowtie2/default:$PATH
 set -xe
 cd '$base'
 mkdir -p bam
@@ -357,10 +414,36 @@ samtools sort -O bam -o '$bismark_bt2_bam_final' -T '${bismark_bt2_bam_unsorted}
 samtools index '${bismark_bt2_bam_final}'
 samtools flagstat '${bismark_bt2_bam_final}' >'${bismark_bt2_bam_final}'.flagstat
 mkdir -p multiqc/raw/bismark/
-ln -sf `readlink -f '$bismark_bt2_dir'/[PS]E_report.txt` multiqc/raw/bismark/; done
+ln -sf `readlink -f '$bismark_bt2_dir'/{sname}_bismark_bt2_SE_.report.txt  multiqc/raw/bismark/; done
 '
   jobname="bismark_bt2_SE_"$sname
 }
+
+function __wgbs_bismark_bowtie2_SE2 {
+  : '
+fastq=trim/${sname}
+direction="--non_directional"
+bismark_bt2_dir=bam/${sname}_bis_bt2
+bismark_bt2_bam_unsorted=bam/${sname}_bis_bt2/${sname}_bis_bt2.bam
+bismark_bt2_bam_final=bam/${sname}_bis_bt2.bam
+hour=200; memG=180; ppn=32
+'
+  cmd='
+export PATH=~/zhoulab/labsoftware/bismark/default:~/zhoulab/labsoftware//bowtie2/default:$PATH
+set -xe
+cd '$base'
+mkdir -p bam
+rm -rf '$bismark_bt2_dir'
+bismark '$direction' '$WZSEQ_BISMARK_BT2_INDEX' --bowtie2 --chunkmbs 2000 --multicore '$ppn' -o '$bismark_bt2_dir' '$fastq' --temp_dir '$bismark_bt2_dir'/tmp
+samtools sort -O bam -o '$bismark_bt2_bam_final' -T '${bismark_bt2_bam_unsorted}'_tmp '${bismark_bt2_bam_unsorted}'
+samtools index '${bismark_bt2_bam_final}'
+samtools flagstat '${bismark_bt2_bam_final}' >'${bismark_bt2_bam_final}'.flagstat
+mkdir -p multiqc/raw/bismark/
+ln -sf `readlink -f bam/'$bismark_bt2_dir'/{sname}_bismark_bt2_SE_report.txt` multiqc/raw/bismark/; done
+'
+  jobname="bismark_bt2_SE_"$sname
+}
+
 
 function __wgbs_bismark_bowtie2_PE {
   # fastq1=fastq/${sname}_trim_galore/${sname}_R1_val_1.fq.gz
@@ -472,7 +555,7 @@ function wgbs_methylKit_summary {
 cd $base
 mkdir methylKit/$bfn
 biscuit vcf2bed -t cg -u -c $f | pybiscuit.py to_methylKit >methylKit/$bfn/$bfn.methylKit
-~/wzlib/Rutils/bin/bioinfo/methylKit.r summary methylKit/$bfn/$bfn.methylKit -o methylKit/$bfn/
+~/wzlib/Ruti__wgbs_biscuit_markdupels/bin/bioinfo/methylKit.r summary methylKit/$bfn/$bfn.methylKit -o methylKit/$bfn/
 "
     jobname="methylKit_summary_$bfn"
     pbsfn=$base/pbs/$jobname.pbs
@@ -644,8 +727,8 @@ pipeline_depend bamjob
   cmd='
 cd '$base'
 mkdir -p pileup
-~/tools/biscuit/development/biscuit/biscuit pileup -q '$ppn' '$WZSEQ_REFERENCE' '$input_bam' >pileup/'$sname.vcf'
-bgzip -f pileup/'$sname.vcf'
+biscuit pileup -q '$ppn' '$WZSEQ_REFERENCE' '$input_bam' >pileup/'$sname'.vcf
+bgzip -f pileup/'$sname'.vcf
 tabix -p vcf pileup/'$sname.vcf.gz'
 
 # ~/tools/biscuit/development/biscuit/biscuit vcf2bed -k 1 -t cg pileup/'$sname.vcf.gz' | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T pileup | ~/tools/biscuit/development/biscuit/biscuit mergecg '$WZSEQ_REFERENCE' - | cut -f1-5 | gzip -c >pileup/'$sname'_cpg.b.gz
