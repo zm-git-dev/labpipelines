@@ -1,7 +1,6 @@
 #!/bin/bash
 
 function tomboResquiggle() {
-
   guppy_dir="/mnt/isilon/zhoulab/labsoftware/guppy/ont-guppy-cpu"
   nanopolish_dir="/mnt/isilon/zhoulab/labsoftware/nanopolish/nanopolish-0.13.2"
   minimap_dir="/mnt/isilon/zhoulab/labsoftware/minimap2"
