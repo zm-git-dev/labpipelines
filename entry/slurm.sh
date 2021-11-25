@@ -1,0 +1,154 @@
+#!/bin/bash
+shopt -s extglob #this is for pattern matching, such as BASH_REMATCH
+shopt -s expand_aliases
+# Remarks:
+# pbsgen one "$cmds" -name $jobname -dest $pbsdir/$jobname $depend
+# note PBS scripts won't expand aliases
+# to enforce aliases, use:
+# shopt -s expand_aliases
+
+# customize this to suit the computing environment (queues etc)
+alias pbsgen=${BASH_SOURCE%/*}/../pbsgen/pbsgen_slurm.py #this is a customed python script to submit job via sbatch / pbs.
+
+#########################
+## Usage
+#########################
+function pipeline_template {
+  cat <<'EOF'
+source $SLURM_ENTRY
+wzref_hg19
+pipeline_prepare
+
+nodes=2
+while read sname; do
+  jump_comments
+   memG=20; ppn=16;
+
+done <<EOM
+sample1
+sample2
+EOM
+EOF
+}
+#pipeline_template is a demo, will not be used.
+###########################################
+## Helper functions
+###########################################
+#_pipeline_prepare can read args and record the user selected pipeline component.
+
+_pipeline_prepare=$(cat <<'EOF'
+callargarray=("$@"); base=$(pwd); [[ -d pbs ]] || mkdir pbs; leveljobids=();
+:<<! 
+$@ get all args
+${#callargarray[@]} is the total number of args, could be replaced by $#
+!
+
+# echo ${#callargarray[@]},0
+if [[ ${#callargarray[@]} > 0 && ${callargarray[-1]} == "do" ]]; then
+  pipeline_submit=true
+  unset 'callargarray[${#callargarray[@]}-1]'
+else
+  pipeline_submit=false
+fi
+# echo ${#callargarray[@]},1
+
+if [[ ${#callargarray[@]} > 0 && ${callargarray[-1]} =~ ^[0-9]+$ ]]; then
+  pipeline_select=${callargarray[-1]}
+elif [[ ${#callargarray[@]} > 0 && "${callargarray[-1]}" =~ ([0-9]*)-([0-9]*) ]]; then
+  pipeline_select=${callargarray[-1]}
+  pipeline_range=true
+  pipeline_range_start=${BASH_REMATCH[1]}
+  pipeline_range_end=${BASH_REMATCH[2]}
+else
+  pipeline_select="all"
+fi
+# echo ${#callargarray[@]},2
+submitted_jobids=()
+level_jobids=()
+
+# echo ${#callargarray[@]},3
+# echo "submit:" $pipeline_submit
+# echo "select:" $pipeline_select
+
+# pipeline_submit=false
+memG=10; ppn=1; gpu=0; ntasks=1; days=5;
+EOF
+)
+
+alias pipeline_prepare='eval "$_pipeline_prepare"'
+
+## the following requires sname to be in the first column, not always the case
+alias jump_comments='sname_re="^#"; [[ "$sname" =~ $sname_re ]] && continue; depend="";'
+
+## define pipeline_select and pipeline_submit
+function pipeline_eval {
+  pipeline_component=$1
+  if [[ "$pipeline_select" == "all" || "$pipeline_component" == "$pipeline_select" || ( "${pipeline_select: -1}" == "+" && "$pipeline_component" -ge "${pipeline_select::-1}" ) || ($pipeline_range && $pipeline_component -ge $pipeline_range_start && $pipeline_component -le $pipeline_range_end) ]]; then
+    echo "submit:" $pipeline_submit
+    echo "select:" $pipeline_select
+    echo "component:" $pipeline_component
+
+    ## jobname is defined in each function
+    $2
+    pbsfn=$base/pbs/${jobname}.pbs
+    pbsgen "$cmd" -name $pbsfn -memG $memG -ntasks $ntasks -ppn $ppn -days $days -gpu ${gpu} -workd $(pwd)
+
+    ## whether to submit
+    if $pipeline_submit; then
+      res=$(sbatch $depend $pbsfn)
+	  jobid=${res##* }
+      # jobid=`date "+%Y-%m-%d_%H-%M-%S"`
+      echo "depend: " $depend
+      echo "submitted jobid: " $jobid
+      echo
+
+      depend="-d afterok:$jobid"
+
+      # collect job id
+      submitted_jobids[$pipeline_component]=$jobid
+      
+      # collect all jobids on the level
+      if [[ -z ${leveljobids[$pipeline_component]} ]]; then
+        leveljobids[$pipeline_component]=$jobid
+      else
+        leveljobids[$pipeline_component]="${leveljobids[$pipeline_component]}:$jobid"
+      fi
+    fi
+  fi
+}
+
+function pipeline_depend {
+  depended_component=$1
+
+  if [[ $depended_component == 'none' ]]; then
+    depend=''
+  fi
+
+  # if dependency is not submitted, assume it's done
+  if [[ -z ${submitted_jobids[$depended_component]} ]]; then
+    depend=""
+  else
+    depend="-d afterok:$jobid"
+  fi
+}
+
+function pipeline_dependlevel {
+  if [[ $# -lt 1 ]]; then
+    depend=""
+  elif [[ -z "${leveljobids[$1]}" ]]; then
+    depend=""
+  else
+    depend="-d afterok:${leveljobids[$1]}"
+  fi
+}
+
+##############################################
+# source the files under references/ and src/
+##############################################
+source ${BASH_SOURCE%/*}/../references/CHOP_HPC.sh
+
+
+for fn in ${BASH_SOURCE%/*}/../src/**/*.sh; do
+  source $fn;
+done
+
