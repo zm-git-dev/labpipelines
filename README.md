@@ -18,6 +18,7 @@ All modules must provide project base name.
 ```
 __zlab_PicardMarkdup_20200719
 __zlab_PicardMarkdup_20211125
+__zlab_sortIndexBam_20211126
 __zlab_bam2fastq_20211125
 __zlab_indexBAM_20211125
 
@@ -26,9 +27,18 @@ __zlab_indexBAM_20211125
 ### Bisulfite-seq
 
 ```
+__zlab_trimGaloreSE_20211125 
 __zlab_trimGalorePE_20211125
+__zlab_BismarkBt2SE_20211125
+__zlab_BismarkMethExtract_20211125
 
+```
 
+## SRA
+
+```
+__zlab_fasterqDumpSE_20200706
+__zlab_fastqDumpSE_20211126
 ```
 
 ## Obsolete module functions
