@@ -7,6 +7,12 @@
 ##########
 ## mouse
 ##########
+function wzref_mm10LambdaT4 {
+  refbase=/mnt/isilon/zhou_lab/projects/20191221_references
+  export WZSEQ_BISMARK_BT2_INDEX=$refbase/mm10LambdaT4/bismark_bt2
+}
+
+
 ###### mouse mm10 #####
 function wzref_mm10 {
   refbase=/mnt/isilon/zhou_lab/projects/20191221_references

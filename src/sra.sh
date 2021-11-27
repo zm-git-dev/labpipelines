@@ -2,6 +2,51 @@
 ## SRA-toolkits
 #################
 
+function __zlab_fastqDumpSE_20211126 {
+  # please use fasterqDump which is faster indeed
+  # input: base, sname, srr_ids
+  cmd='
+set -xe
+mkdir -p '$base'/fastq
+cd '$base'/fastq
+rm -f '${sname}'.fastq.gz
+for f in '$srr_ids'; do
+  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/default/bin/fastq-dump --gzip $f;
+  cat ${f}.fastq.gz >>'${sname}'.fastq.gz
+  rm -f ${f}.fastq.gz
+done
+'
+  jobname='fastqDumpSE_'$sname
+}
+
+function __zlab_fasterqDumpSE_20200706 {
+  # this is indeed faster than fastqdump, prefetch is better at resuming from network failure
+  # see https://github.com/ncbi/sra-tools/issues/374
+  # make sure to set a high ppn as the gzip is a limiting step
+  cmd='
+set -xe
+mkdir -p '$base'/fastq
+cd '$base'/fastq
+rm -f '${sname}'.fastq.gz
+for f in '$srr_ids'; do
+
+  # generate sra/$f.sra
+  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/prefetch --resume yes --max-size 1T -O sra/ ${f}
+
+  # generate $f.sra.fastq
+  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/fasterq-dump --force --temp sra/${f} --split-3 --split-files sra/${f}.sra
+  
+  pigz -p '$ppn' -c ${f}.sra.fastq >>'${sname}'.fastq.gz
+
+  # cleaning, delete .fastq only in case .sra needs to be used later
+  rm -f ${f}.sra.fastq
+  rm -f sra/${f}.sra
+  rm -rf sra/${f}
+done
+'
+  jobname="fasterqDumpSE_"$sname
+}
+
 ## I have spent a lot of time finagling with fastq-dump but it gave me the timeout error randomly.
 ## I think this issue is specific to respublica.
 ## Please use the following (prefetch + fasterq-dump)
@@ -27,42 +72,42 @@ done
   jobname="fasterqdump_"$sname
 }
 
-function __sra_fasterq_dump_SE_20200706 {
-  cmd='
-set -xe
-mkdir -p '$base'/fastq
-cd '$base'/fastq
-rm -f '${sname}'_R1.fastq.gz
-for f in '$srr_ids'; do
+# function __sra_fasterq_dump_SE_20200706 {
+#   cmd='
+# set -xe
+# mkdir -p '$base'/fastq
+# cd '$base'/fastq
+# rm -f '${sname}'_R1.fastq.gz
+# for f in '$srr_ids'; do
 
-  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/prefetch --resume yes --max-size 1T -O sra/ ${f}
-  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/fasterq-dump --force --temp sra/${f} --split-3 --split-files sra/${f}.sra
+#   /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/prefetch --resume yes --max-size 1T -O sra/ ${f}
+#   /mnt/isilon/zhoulab/labsoftware/sra-toolkit/sratoolkit.2.10.8-centos_linux64/bin/fasterq-dump --force --temp sra/${f} --split-3 --split-files sra/${f}.sra
   
-  pigz -p '$ppn' -c ${f}.sra.fastq >>'${sname}'_R1.fastq.gz
+#   pigz -p '$ppn' -c ${f}.sra.fastq >>'${sname}'_R1.fastq.gz
 
-  # cleaning, delete .fastq only in case .sra needs to be used later
-  rm -f ${f}.sra.fastq 
-  # rm -f sra/${f}.sra
-done
-'
-  jobname="fasterqdump_"$sname
-}
+#   # cleaning, delete .fastq only in case .sra needs to be used later
+#   rm -f ${f}.sra.fastq 
+#   # rm -f sra/${f}.sra
+# done
+# '
+#   jobname="fasterqdump_"$sname
+# }
 
-function __wzseq_fastq_dump_SE {
-  # input: base, sname, srr_ids
-  cmd='
-set -xe
-mkdir -p '$base'/fastq
-cd '$base'/fastq
-rm -f '${sname}'.fastq.gz
-for f in '$srr_ids'; do
-  /mnt/isilon/zhoulab/labsoftware/sra-toolkit/default/bin/fastq-dump -S -3 --gzip $f;
-  cat ${f}.fastq.gz >>'${sname}'.fastq.gz
-  rm -f ${f}.fastq.gz
-done
-'
-  jobname='fastqdump_'$sname
-}
+# function __wzseq_fastq_dump_SE {
+#   # input: base, sname, srr_ids
+#   cmd='
+# set -xe
+# mkdir -p '$base'/fastq
+# cd '$base'/fastq
+# rm -f '${sname}'.fastq.gz
+# for f in '$srr_ids'; do
+#   /mnt/isilon/zhoulab/labsoftware/sra-toolkit/default/bin/fastq-dump -S -3 --gzip $f;
+#   cat ${f}.fastq.gz >>'${sname}'.fastq.gz
+#   rm -f ${f}.fastq.gz
+# done
+# '
+#   jobname='fastqdump_'$sname
+# }
 
 function __wzseq_fastq_dump_PE {
   cmd='

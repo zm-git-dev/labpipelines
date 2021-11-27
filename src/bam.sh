@@ -1,13 +1,19 @@
 function __zlab_PicardMarkdup_20211125 {
   cmd='
-  cd '$base'
-  [[ -d bam/picard_mdup ]] || mkdir bam/picard_mdup
-  java -Xmx10g -Djava.io.tmpdir=./tmp/ -jar ~/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
-       CREATE_INDEX=true ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=SILENT\
-       METRICS_FILE=bam/picard_mdup/${input}.mdup.stats READ_NAME_REGEX=null\
-       INPUT='${input}' OUTPUT=bam/picard_mdup/'${input}' TMP_DIR=tmp
-  samtools flagstat bam/picard_mdup/'${input}' > bam/picard_mdup/'${input}'.flagstat'
-  jobname='_PicardMarkdup_'$sname
+cd '$base'
+[[ -d bam_PicardMdup ]] || mkdir bam_PicardMdup
+java -Xmx10g -Djava.io.tmpdir=./tmp/ -jar ~/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
+     CREATE_INDEX=true ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=SILENT\
+     METRICS_FILE=bam_PicardMdup/${input}.mdup.stats READ_NAME_REGEX=null\
+     INPUT='${input}' OUTPUT=bam_PicardMdup/'${sname}'.bam TMP_DIR=tmp
+
+samtools flagstat bam_PicardMdup/'${sname}'.bam >bam_PicardMdup/'${sname}'.bam.flagstat
+
+## setup multiqc
+mkdir -p multiqc/raw/Picardmdup/
+cp -a bam_PicardMdup/'${sname}'.bam.flagstat multiqc/raw/Picardmdup/'$sname'_deduped.flagstat
+'
+  jobname='PicardMarkdup_'$sname
 }
 
 function __zlab_PicardMarkdup_20200719 {
@@ -24,7 +30,21 @@ if [[ ! -e ${outBasename}.markDup.bam ]]; then
   ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true REMOVE_DUPLICATES=false
 fi
 '
-  jobname='_PicardMarkdup_'$sname
+  jobname='PicardMarkdup_'$sname
+}
+
+function __zlab_sortIndexBam_20211126 {
+  # this function is serial, so slow
+  cmd='
+samtools sort -O bam -o '$out_bam' -T '${in_bam}'_tmp '$in_bam'
+samtools index '${out_bam}'
+samtools flagstat '${out_bam}' >'${out_bam}'.flagstat
+
+## setup multiqc
+mkdir -p multiqc/raw/flagstat/
+cp -a '${out_bam}'.flagstat multiqc/raw/flagstat/
+'
+  jobname='sortIndexBam_'$sname
 }
 
 function __zlab_bam2fastq_20211125 {
@@ -77,18 +97,18 @@ ln -sf `readlink -f '$bam'.flagstat` multiqc/raw/flagstats/
   jobname="bamindex_"${bam//\//_}
 }
 
-function _zlab_downsampleBAM_20211125 {
+function __zlab_downsampleBAM_20211125 {
   [[ -z ${n_replicates+x} ]] && n_replicates=50;
   [[ -z ${n_reads+x} ]] && n_reads=100
   cmd='
 cd '$base'
-mkdir subBAM
-frac=$(samtools idxstats ${input_bam}| awk '\''{n+=$3} END {f='${n_reads}'/n; if(f>1) {f=1} print f;}'\'' | sed '\''s/^0*//'\'')
+mkdir -p subBAM
+frac=$(samtools idxstats '${in_bam}' | awk '\''{n+=$3} END {f='${n_reads}'/n; if(f>1) {f=1} print f;}'\'' | sed '\''s/^0*//'\'')
   
 echo "Downsampling based on fraction: '${n_reads}', ${frac}"
 for j in {1..'$n_replicates'}; do
-  samtools view -b -@ $ppn -s ${j}${frac} ${input_bam} >subBAM/${sname}_down_${n_reads}_${j}.bam
-  echo "$n_reads, $frac"
+  echo Replicate '$j'
+  samtools view -b -@ $ppn -s ${j}${frac} '${in_bam}' >subBAM/'${sname}'_down_'${n_reads}'_${j}.bam
 done
 '
 }

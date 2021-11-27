@@ -1,159 +1,70 @@
 function __zlab_trimGaloreSE_20211125 {
+
+  # for faster speed one can omit --fastqc
+  # estimated time is ~1hr for a 50G .fa.gz
+
   cmd='
-set -xe
 cd '$base'
 mkdir -p trim
-trim_galore --path_to_cutadapt /scr1/users/zhouw3/labsoftware/anaconda3/bin/cutadapt --fastqc '$fastq' --gzip -o trim/'$sname'
+trim_galore --gzip --clip_R1 10 --three_prime_clip_R1 10 --length 20 --path_to_cutadapt /scr1/users/zhouw3/labsoftware/anaconda3/bin/cutadapt --cores '$ppn' --fastqc '$fastq' --gzip -o trim/'$sname'
 
 ## setup multiqc
 mkdir -p multiqc/raw/trim_galore/
-ln -fs `readlink -f trim/'$sname'` multiqc/raw/trim_galore/
+cp -a trim/'$sname'/'$sname'*trimming_report.txt multiqc/raw/trim_galore/
+cp -a trim/'$sname'/'$sname'*trimmed_fastqc.html multiqc/raw/trim_galore/
+cp -a trim/'$sname'/'$sname'*trimmed_fastqc.zip multiqc/raw/trim_galore/
 '
-  jobname="trim_galore_SE_"$sname
+  jobname="trimGaloreSE_"$sname
 }
 
 function __zlab_trimGalorePE_20211125 {
-  ## Example:
-  ## trim_galore_dir=fastq/${sname}_trim_galore
-  ## hour=20; memG=5; ppn=1
-  ## pipeline_eval 12 __zlab_trimGalorePE_20211125
   
   cmd='
-set -xe
 cd '$base'
 [[ -d '$trim_galore_dir' ]] && rm -rf '$trim_galore_dir'
 mkdir -p '$trim_galore_dir'
 trim_galore --quality 28 --phred33 --fastqc --clip_R1 9 --clip_R2 9 --three_prime_clip_R1 9 --three_prime_clip_R2 9 --paired '$fastq1' '$fastq2' -o '$trim_galore_dir'
 mkdir -p multiqc/raw/trim_galore/
-ln -s `readlink -f '$trim_galore_dir'` multiqc/raw/trim_galore/
+## TODO add multiqc
 '
-  jobname="trim_galore_PE_"$sname
-}
-
-# bismark with bowtie2
-function __zlab_BismarkBowtie2PrepareRef_20211125 {
-  # Example:
-  # hour=48; memG=5; ppn=1
-  # pipeline_eval 1 _zlab_BismarkBowtie2PrepareRef_20211125
-  cmd='
-export PATH=~/tools/bismark/default:~/tools/bowtie2/default:$PATH
-bismark_genome_preparation --bowtie2 --verbose '$WZSEQ_BISMARK_BT2_INDEX'
-'
-  jobname="BismarkBowtie2PrepareRef"
+  jobname="trimGalorePE_"$sname
 }
 
 function __zlab_BismarkBt2SE_20211125 {
-  # Examples:
-  # fastq=trim/${sname}
-  # direction="--non_directional"
-  # bismark_bt2_dir=bam_bismarkbt2/${sname}
-  # bismark_bt2_bam_unsorted=bam_bismarkbt2/${sname}/${sname}_bis_bt2.bam
-  # bismark_bt2_bam_final=bam_bismarkbt2/${sname}.bam
-  # hour=200; memG=180; ppn=24
+
+  # prepare bismark reference
+  # export PATH=~/software/bismark/default:~/software/bowtie2/default:$PATH
+  # bismark_genome_preparation --bowtie2 --verbose '$WZSEQ_BISMARK_BT2_INDEX'
+  # the output unsorted bam is at $bam_dir/$(basename $fastq)_bismark_bt2.bam
+
   cmd='
 export PATH=~/zhoulab/labsoftware/bismark/default:~/zhoulab/labsoftware//bowtie2/default:$PATH
-set -xe
 cd '$base'
 mkdir -p bam_bismarkbt2
-rm -rf '$bismark_bt2_dir'
-bismark '$direction' '$WZSEQ_BISMARK_BT2_INDEX' --bowtie2 --chunkmbs 2000 --multicore '$ppn' -o '$bismark_bt2_dir' '$fastq' --temp_dir '$bismark_bt2_dir'/tmp
-samtools sort -O bam -o '$bismark_bt2_bam_final' -T '${bismark_bt2_bam_unsorted}'_tmp '${bismark_bt2_bam_unsorted}'
-samtools index '${bismark_bt2_bam_final}'
-samtools flagstat '${bismark_bt2_bam_final}' >'${bismark_bt2_bam_final}'.flagstat
+rm -rf '$bam_dir'
+bismark '$WZSEQ_BISMARK_BT2_INDEX' --bowtie2 --chunkmbs 2000 --multicore '$ppn' -o '$bam_dir' '$fastq' --temp_dir '$bam_dir'/tmp
+
+## setup multiqc
 mkdir -p multiqc/raw/bismark/
-ln -sf `readlink -f bam/'$bismark_bt2_dir'/{sname}_bismark_bt2_SE_report.txt` multiqc/raw/bismark/; done
+cp -a '$bam_dir'/'$(basename $fastq)'_bismark_bt2_SE_report.txt multiqc/raw/bismark/
 '
   jobname="BismarkBt2SE_"$sname
 }
 
-function __wgbs_bismark_bowtie2_SE {
-  : '
-fastq=trim/${sname}
-direction="--non_directional"
-bismark_bt2_dir=bam/${sname}_bismark_bt2
-bismark_bt2_bam_unsorted=bam/${sname}_bismark_bt2/${sname}_merged.fq.gz_bismark_bt2.bam
-bismark_bt2_bam_final=bam/${sname}_bismark_bt2.bam
-hour=200; memG=180; ppn=28
-'
+function __zlab_BismarkMethExtract_20211125 {
+
   cmd='
 export PATH=~/zhoulab/labsoftware/bismark/default:~/zhoulab/labsoftware//bowtie2/default:$PATH
-set -xe
 cd '$base'
-mkdir -p bam
-rm -rf '$bismark_bt2_dir'
-bismark '$direction' '$WZSEQ_BISMARK_BT2_INDEX' --bowtie2 --chunkmbs 2000 -p '$ppn' -o '$bismark_bt2_dir' '$fastq' --temp_dir '$bismark_bt2_dir'/tmp
-samtools sort -O bam -o '$bismark_bt2_bam_final' -T '${bismark_bt2_bam_unsorted}'_tmp '${bismark_bt2_bam_unsorted}'
-samtools index '${bismark_bt2_bam_final}'
-samtools flagstat '${bismark_bt2_bam_final}' >'${bismark_bt2_bam_final}'.flagstat
-mkdir -p multiqc/raw/bismark/
-ln -sf `readlink -f '$bismark_bt2_dir'/{sname}_bismark_bt2_SE_.report.txt  multiqc/raw/bismark/; done
-'
-  jobname="bismark_bt2_SE_"$sname
-}
+mkdir -p bismark_methextract
+bismark_methylation_extractor --no_overlap --multicore '$ppn' --gzip '$in_bam' --bedGraph '$in_bam' -o bismark_methextract
+zcat bismark_methextract/'$(basename $in_bam .bam)'.bismark.cov.gz | awk '\''{print $1,$2-1,$3,$4/100,$5+$6}'\'' | sortbed | biscuit mergecg '$WZSEQ_REFERENCE' - | gzip -c >bismark_methextract/'$sname'.cpg_methylation.bed.gz
 
-function __wgbs_bismark_bowtie2_PE {
-  # fastq1=fastq/${sname}_trim_galore/${sname}_R1_val_1.fq.gz
-  # fastq2=fastq/${sname}_trim_galore/${sname}_R2_val_2.fq.gz
-  # direction="--non_directional"
-  # pbat=""
-  # bismark_bt2_dir=bam/${sname}_bismark_bt2
-  # bismark_bt2_bam_unsorted=bam/${sname}_bismark_bt2/${sname}_pe.bam
-  # bismark_bt2_bam_final=bam/${sname}_bismark_bt2.bam
-  # hour=200; memG=180; ppn=28
-  cmd='
-export PATH=~/tools/bismark/default:~/tools/bowtie2/default:$PATH
-set -xe
-cd '$base'
-mkdir -p bam
-rm -rf '$bismark_bt2_dir'
-bismark '$direction' '$pbat' '$WZSEQ_BISMARK_BT2_INDEX' --bowtie2 --chunkmbs 2000 -p '$ppn' -o '$bismark_bt2_dir' -B '$sname' -1 '$fastq1' -2 '$fastq2' -temp_dir '$bismark_bt2_dir'/tmp
-samtools sort -O bam -o '$bismark_bt2_bam_final' -T '$bismark_bt2_bam_unsorted'_tmp '$bismark_bt2_bam_unsorted'
-samtools index '$bismark_bt2_bam_final'
-samtools flagstat '$bismark_bt2_bam_final' >'$bismark_bt2_bam_final'.flagstat
-mkdir -p multiqc/raw/bismark
-ln -s `readlink -f '$bismark_bt2_dir'` multiqc/raw/bismark/
+## setup multiqc
+mkdir -p multiqc/raw/bismark_methextract
+cp -a bismark_methextract/'$(basename $in_bam)'_splitting_report.txt multiqc/raw/bismark_methextract/
 '
-  jobname="bismark_bt2_PE_$sname"
-}
-
-function __wgbs_bismark_deduplicate {
-  # Please note that this function is very memory-consuming
-  # input_bam=bam/${sname}_bismark_bt2.bam
-  # hour=48; memG=50; ppn=2
-  # library="-p"
-  ## paired-end
-  # library="-p"
-  ## single-end
-  # library="-s"
-  cmd='
-export PATH=~/tools/bismark/default:~/tools/bowtie2/default:$PATH
-cd '$base'
-mkdir -p multiqc/raw/bismark/
-deduplicate_bismark '$library' --bam '$input_bam'
-ln -sf `readlink -f '${input_bam%.bam}'.deduplication_report.txt` multiqc/raw/bismark/
-'
-  jobname="bismark_deduplicate_"$sname
-}
-
-function __wgbs_bismark_methylextraction {
-  : '
-# for paired-end
-library="--no_overlap"
-# for single-end
-library=""
-
-input_bam=bam/${sname}_bismark_bt2.deduplicated.bam
-hour=48; memG=10; ppn=1
-'
-  cmd='
-export PATH=~/tools/bismark/default:~/tools/bowtie2/default:$PATH
-cd '$base'
-mkdir -p bismark_methylextraction
-bismark_methylation_extractor '$library' --gzip --bedGraph '$input_bam' -o bismark_methylextraction
-zcat bismark_methylextraction/'$(basename $input_bam .bam)'.bismark.cov.gz | awk '\''{print $1,$2-1,$3,$4/100,$5+$6}'\'' | sortbed | biscuit mergecg '$WZSEQ_REFERENCE' - >bismark_methylextraction/'$sname'.cpg_methylation.bed
-ln -sf `readlink -f bismark_methylextraction/'$(basename $input_bam)'_splitting_report.txt` multiqc/raw/bismark/
-'
-  jobname="bismark_methylation_extraction_"$sname
+  jobname="BismarkMethExtract_"$sname
 }
 
 

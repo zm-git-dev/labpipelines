@@ -1,57 +1,65 @@
 source $SLURM_ENTRY
+# wzref_mm10LambdaT4
 wzref_mm10
 pipeline_prepare
 
 base=/scr1/users/zhouw3/projects/20211119_5hmC_Project/
+cd $base
 
-while read sname; do
+while read sname design srr_ids; do
   jump_comments
-
-  hour=48; memG=64; ppn=24; queue=defq
   pipeline_depend none
+  
+  srr_ids=${srr_ids//,/ };
+  pipeline_dependlevel
+  days=1; memG=100; ppn=24      # 1-2h
+  pipeline_eval 1 __zlab_fasterqDumpSE_20200706
 
-  trim_galore_dir=fastq/trimmed/
-  pipeline_eval 1 __zlab_trimGaloreSE_20211125
+  fastq=fastq/$sname.fastq.gz
+  days=2; memG=100; ppn=24      # 1-2h
+  pipeline_eval 2 __zlab_trimGaloreSE_20211125
 
-  fastq=trim/${sname}
-  direction="--non_directional"
-  bismark_bt2_dir=bam/${sname}
-  bismark_bt2_bam_unsorted=bam_bismarkbt2/${sname}/${sname}_merged.fq.gz_bismark_bt2.bam
-  bismark_bt2_bam_final=bam/${sname}.bam
-  hour=48; memG=180; ppn=10; queue=defq
-  pipeline_eval 2 __zlab_BismarkBt2SE_20211125
+  fastq=trim/$sname/${sname}_trimmed.fq.gz
+  bam_dir=bam_bismarkbt2/$sname
+  days=3; memG=500; ppn=24      # 12-24h
+  pipeline_eval 3 __zlab_BismarkBt2SE_20211125
 
-  #   cat <<'EOF' | sbatch --mem=64G -c 10 -t 3-2
-  # #!/bin/bash
-  # cd $base
-  # input=/mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/TAB-seq/GSM1180307/bam/GSM1180307_bis_bt2.bam
-  # java -Xmx10g -Djava.io.tmpdir=./tmp/ -jar ~/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates CREATE_INDEX=true ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=SILENT METRICS_FILE=picard/GSM1180307_bis_bt2.mdup.stats READ_NAME_REGEX=null INPUT=${input} OUTPUT=picard/GSM1180307_bis_bt2.bam TMP_DIR=tmp
-  # samtools flagstat picard/GSM1180307_bis_bt2.bam > picard/GSM1180307_bis_bt2.bam.flagstat
-  # EOF
+  in_bam=bam_bismarkbt2/$sname/$(basename $fastq)_bismark_bt2.bam
+  out_bam=bam_bismarkbt2/${sname}.bam
+  days=1; memG=20; ppn=3        # 2-3h
+  pipeline_eval 4 __zlab_sortIndexBam_20211126
+  # Hao used the following options which all seem to be equal to default
+  # nohup ${bismark_dir}/bismark --bowtie2 --fastq --multicore 4 -D 15 -R 2 -L 20 -N 0 --score_min L,0,-0.2 --gzip --bam ${genome_folder} ${output_dir}/${expt_id}_trimmed.fq.gz &> ${expt_id}_bismark.out # multicore >1 is only comptabile with --bam; --non_bs_mm: This option is only available for SAM format.
+  
+  input=bam_bismarkbt2/${sname}.bam
+  days=2; memG=30; ppn=2        # 3h
+  pipeline_eval 5 __zlab_PicardMarkdup_20211125
 
-  #   for filename in *.bam; do
-  #   echo "extracting methylation for: ${filename}"
-  #   /mnt/isilon/zhoulab/labsoftware/bismark/bismark_v0.14.5/bismark_methylation_extractor --no_overlap --multicore 5 --report ${filename}
-  # done
+  in_bam=bam_Picardmdup/${sname}.bam
+  days=3; memG=100; ppn=10      # 
+  pipeline_eval 6 __zlab_BismarkMethExtract_20211125
+  
+  n_replicates=50
+  for n_reads_power in {6..18}; do
+    n_reads=$((2**$n_reads_power))
+    days=1; memG=30; ppn=1
+    in_bam=bam_Picardmdup/${sname}.bam
+    pipeline_eval 7 __zlab_downsampleBAM_20211125
+  done
 
 done << EOM
-# GSM1180315
-GSM1180316
-# GSM1180317
-# GSM1180306
-# GSM1180307
-# GSM1180308
-# GSM1541958
-# GSM1541959
-# GSM3207185
-# GSM3207186
+GSM1180315	SINGLE	SRR925933,SRR925932,SRR925938,SRR925937,SRR925936,SRR925935,SRR925934
+# GSM1180316	SINGLE	SRR925940,SRR925939,SRR925945,SRR925944,SRR925943,SRR925942,SRR925941
+# GSM1180317	SINGLE	SRR925947,SRR925946,SRR925953,SRR925952,SRR925951,SRR925950,SRR925949,SRR925948
+# GSM1180306	SINGLE	SRR925885,SRR925884,SRR925883,SRR925882,SRR925881,SRR925880
+# GSM1180307	SINGLE	SRR925891,SRR925890,SRR925889,SRR925888,SRR925887,SRR925886
+# GSM1180308	SINGLE	SRR925892,SRR925893,SRR925894,SRR925895,SRR925899,SRR925897,SRR925896
+# GSM1541958	SINGLE	SRR1647862,SRR1647863,SRR1647864
+# GSM1541959	SINGLE	SRR1647867,SRR1647866,SRR1647865
+# GSM3207185	SINGLE	SRR7368849,SRR7368848
+# GSM3207186	SINGLE	SRR7368851,SRR7368850
+# GSM3207181	SINGLE	SRR7368841,SRR7368842
+# GSM3207183  SINGLE	SRR7368845
+# GSM3207182	SINGLE	SRR7368843,SRR7368844
+# GSM3207184	SINGLE	SRR7368846,SRR7368847
 EOM
-
-
-# cat ~/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_Neurons/ACE-seq/GSM3207185/SRR7368848.fastq ~/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_Neurons/ACE-seq/GSM3207185/SRR7368849.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM3207185.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_Neurons/ACE-seq/GSM3207186/SRR7368850.fastq /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_Neurons/ACE-seq/GSM3207186/SRR7368851.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM3207186.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/TAB-seq/GSM1180307/GSM1180307.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM1180307.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/TAB-seq/GSM1180308/GSM1180308.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM1180308.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/WGBS/GSM1180315/GSM1180315.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM1180315.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/WGBS/GSM1180316/GSM1180316.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM1180316.fastq.gz
-# cat /mnt/isilon/zhoulab/labprojects/20210827_5hmCProject_WI/20210802_ESCs/WGBS/GSM1180317/GSM1180317.fastq | pigz -p 24 -c >~/scr1_zhouw3/projects/20211119_5hmC_Project/fastq/GSM1180317.fastq.gz
