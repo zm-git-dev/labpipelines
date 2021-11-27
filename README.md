@@ -6,7 +6,7 @@ Clone this repository point an environment variable __SLURM_ENTRY__ to your inst
 
 ## Example pipelines
 
-[pipelines/20190510_Walid_scWGBS.pipe.sh](pipelines/20190510_Walid_scWGBS.pipe.sh)
+[pipelines/20211125_Waleed_WGBS.sh](20211125_Waleed_WGBS.sh)
 
 ## Available modules
 
