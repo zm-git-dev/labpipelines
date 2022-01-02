@@ -23,7 +23,6 @@ cd '$base'
 outdir="filtered_bam"
 mkdir -p ${outdir}
 outBasename=${outdir}/'$sname'
-map_thresh=20
 if [[ ! -e ${outBasename}.markDup.bam ]]; then
   java -jar /mnt/isilon/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
   I='$bam' O=${outBasename}.markDup.bam METRICS_FILE=${outBasename}_dup_qc.txt\
@@ -107,10 +106,11 @@ frac=$(samtools idxstats '${in_bam}' | awk '\''{n+=$3} END {f='${n_reads}'/n; if
   
 echo "Downsampling based on fraction: '${n_reads}', ${frac}"
 for j in {1..'$n_replicates'}; do
-  echo Replicate '$j'
-  samtools view -b -@ $ppn -s ${j}${frac} '${in_bam}' >subBAM/'${sname}'_down_'${n_reads}'_${j}.bam
+  echo Replicate $j
+  samtools view -b -@ '$ppn' -s ${j}${frac} '${in_bam}' >subBAM/'${sname}'_down_'${n_reads}'_${j}.bam
 done
 '
+  jobname="downsampleBAM_"$sname"_"$n_reads
 }
 
 # function bam2bigwig() {

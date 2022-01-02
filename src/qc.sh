@@ -21,7 +21,7 @@ function __fastqc20200718 {
 set -xe
 cd '$base'
 mkdir -p fastqc
-fastqc -f fastq -t 10 -o fastqc '$fastq'
+fastqc -f fastq -t '${ppn}' -o fastqc '$fastq'
 '
   jobname='fastqc_'$sname
 }

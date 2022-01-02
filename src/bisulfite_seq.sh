@@ -58,11 +58,12 @@ export PATH=~/zhoulab/labsoftware/bismark/default:~/zhoulab/labsoftware//bowtie2
 cd '$base'
 mkdir -p bismark_methextract
 bismark_methylation_extractor --no_overlap --multicore '$ppn' --gzip '$in_bam' --bedGraph '$in_bam' -o bismark_methextract
-zcat bismark_methextract/'$(basename $in_bam .bam)'.bismark.cov.gz | awk '\''{print $1,$2-1,$3,$4/100,$5+$6}'\'' | sortbed | biscuit mergecg '$WZSEQ_REFERENCE' - | gzip -c >bismark_methextract/'$sname'.cpg_methylation.bed.gz
+zcat bismark_methextract/'$(basename $in_bam .bam)'.bismark.cov.gz | awk '\''{print $1"\t"$2-1"\t"$3"\t"$4/100"\t"$5+$6}'\'' | sortbed | biscuit mergecg '$WZSEQ_REFERENCE' - | gzip -c >bismark_methextract/'$sname'.bed.gz
 
 ## setup multiqc
 mkdir -p multiqc/raw/bismark_methextract
 cp -a bismark_methextract/'$(basename $in_bam)'_splitting_report.txt multiqc/raw/bismark_methextract/
+cp -a bismark_methextract/'$sname'.M-bias.txt multiqc/raw/bismark_methextract/
 '
   jobname="BismarkMethExtract_"$sname
 }
