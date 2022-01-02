@@ -6,7 +6,7 @@ Clone this repository point an environment variable __SLURM_ENTRY__ to your inst
 
 ## Example pipelines
 
-[pipelines/20190510_Walid_scWGBS.pipe.sh](pipelines/20190510_Walid_scWGBS.pipe.sh)
+[20211125_Waleed_WGBS.sh](pipelines/20211125_Waleed_WGBS.sh)
 
 ## Available modules
 
@@ -18,6 +18,7 @@ All modules must provide project base name.
 ```
 __zlab_PicardMarkdup_20200719
 __zlab_PicardMarkdup_20211125
+__zlab_sortIndexBam_20211126
 __zlab_bam2fastq_20211125
 __zlab_indexBAM_20211125
 
@@ -26,9 +27,18 @@ __zlab_indexBAM_20211125
 ### Bisulfite-seq
 
 ```
+__zlab_trimGaloreSE_20211125 
 __zlab_trimGalorePE_20211125
+__zlab_BismarkBt2SE_20211125
+__zlab_BismarkMethExtract_20211125
 
+```
 
+## SRA
+
+```
+__zlab_fasterqDumpSE_20200706
+__zlab_fastqDumpSE_20211126
 ```
 
 ## Obsolete module functions
