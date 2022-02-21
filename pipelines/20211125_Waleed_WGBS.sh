@@ -36,6 +36,7 @@ while read sname design srr_ids; do
   pipeline_eval 5 __zlab_PicardMarkdup_20211125
 
   in_bam=bam_PicardMdup/${sname}.bam
+  outdir=bismark_methextract
   days=3; memG=100; ppn=10      # 4h
   pipeline_eval 6 __zlab_BismarkMethExtract_20211125
   

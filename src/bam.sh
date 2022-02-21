@@ -1,3 +1,19 @@
+function __zlab_PicardMarkdup_20200719 {
+  cmd='
+cd '$base'
+[[ -d pbs ]] || mkdir pbs
+outdir="filtered_bam"
+mkdir -p ${outdir}
+outBasename=${outdir}/'$sname'
+if [[ ! -e ${outBasename}.markDup.bam ]]; then
+  java -jar /mnt/isilon/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
+  I='$bam' O=${outBasename}.markDup.bam METRICS_FILE=${outBasename}_dup_qc.txt\
+  ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true REMOVE_DUPLICATES=false
+fi
+'
+  jobname='PicardMarkdup_'$sname
+}
+
 function __zlab_PicardMarkdup_20211125 {
   cmd='
 cd '$base'
@@ -16,25 +32,10 @@ cp -a bam_PicardMdup/'${sname}'.bam.flagstat multiqc/raw/Picardmdup/'$sname'_ded
   jobname='PicardMarkdup_'$sname
 }
 
-function __zlab_PicardMarkdup_20200719 {
-  cmd='
-cd '$base'
-[[ -d pbs ]] || mkdir pbs
-outdir="filtered_bam"
-mkdir -p ${outdir}
-outBasename=${outdir}/'$sname'
-if [[ ! -e ${outBasename}.markDup.bam ]]; then
-  java -jar /mnt/isilon/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates\
-  I='$bam' O=${outBasename}.markDup.bam METRICS_FILE=${outBasename}_dup_qc.txt\
-  ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true REMOVE_DUPLICATES=false
-fi
-'
-  jobname='PicardMarkdup_'$sname
-}
-
 function __zlab_sortIndexBam_20211126 {
   # this function is serial, so slow
   cmd='
+mkdir -p '$(dirname $out_bam)'
 samtools sort -O bam -o '$out_bam' -T '${in_bam}'_tmp '$in_bam'
 samtools index '${out_bam}'
 samtools flagstat '${out_bam}' >'${out_bam}'.flagstat
@@ -111,6 +112,15 @@ for j in {1..'$n_replicates'}; do
 done
 '
   jobname="downsampleBAM_"$sname"_"$n_reads
+}
+
+function __zlab_PicardMarkdup_20220219 {
+  cmd='
+cd '$base'
+mkdir -p '${outdir}'
+java -Xmx10g -Djava.io.tmpdir=./tmp/ -jar ~/zhoulab/labsoftware/picard/picard-2.23.2.jar MarkDuplicates CREATE_INDEX=true ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT READ_NAME_REGEX=null METRICS_FILE='${outdir}'/'${sname}'.mdup.stats INPUT='${input}' OUTPUT='${outdir}'/'${sname}'.bam TMP_DIR='${outdir}'
+'
+  jobname='PicardMarkdup_'$sname
 }
 
 # function bam2bigwig() {
