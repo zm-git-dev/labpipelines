@@ -40,6 +40,11 @@ while read sname; do
   outdir=pileup
   days=1; memG=100; ppn=10
   pipeline_eval 15 __zlab_convertBigwigCG_20220219
+
+  input=bam_biscuit_picard/${sname}.bam
+  outdir=BISCUITqc
+  days=2; memG=10; ppn=4
+  pipeline_eval 16 __zlab_biscuitQC_20220224
  
   fastq1=trim/${sname}_R1_val_1.fq.gz
   fastq2=trim/${sname}_R2_val_2.fq.gz

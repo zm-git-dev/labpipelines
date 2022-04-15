@@ -19,7 +19,6 @@ source $SLURM_ENTRY
 wzref_hg19
 pipeline_prepare
 
-nodes=2
 while read sname; do
   jump_comments
    memG=20; ppn=16;
@@ -95,6 +94,7 @@ function pipeline_eval {
     $2
     pbsfn=$base/pbs/${jobname}.pbs
     pbsgen "$cmd" -name $pbsfn -memG $memG -ntasks $ntasks -ppn $ppn -days $days -gpu ${gpu} -workd $(pwd)
+    #if -nodes was added, use: -nodes "${nodes}"
 
     ## whether to submit
     if $pipeline_submit; then

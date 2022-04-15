@@ -106,7 +106,7 @@ biscuit pileup -q '$ppn' '$WZSEQ_REFERENCE' '$input' >'$outdir'/'$sname'.vcf
 bgzip -f '$outdir'/'$sname'.vcf
 tabix -p vcf '$outdir'/'$sname.vcf.gz'
 
-biscuit vcf2bed -k 1 -t cg '$outdir'/'$sname'.vcf.gz | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T '$outdir' | ~/bin/biscuit mergecg '$WZSEQ_REFERENCE' - | bedtools intersect -a '$WZSEQ_CPGBED' -b - -sorted -loj | cut -f1-3,7,8 | bgzip -fc >'$outdir'/'$sname'_cg.bed.gz
+biscuit vcf2bed -k 1 -t cg '$outdir'/'$sname'.vcf.gz | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T '$outdir' | biscuit mergecg '$WZSEQ_REFERENCE' - | bedtools intersect -a '$WZSEQ_CPGBED' -b - -sorted -loj | cut -f1-3,7,8 | bgzip -fc >'$outdir'/'$sname'_cg.bed.gz
 tabix -p bed '$outdir'/'$sname'_cg.bed.gz
 '
   jobname="biscuitPileup_"$sname
@@ -117,12 +117,75 @@ function __zlab_convertBigwigCG_20220219 {
   cmd='
 cd '$base'
 mkdir -p '$outdir'
-zcat '$input' | awk '\''$5!="." && $5>=5'\'' | gzip -c >'$outdir'/'$sname'_cg.bed.gz
-zcat '$outdir'/'$sname'_cg.bed.gz | cut -f1-4 >'$outdir'/'$sname'_cg_tmp.bedg
+zcat '$input' | awk '\''$5!="." && $5>=5'\'' | cut -f1-4 >'$outdir'/'$sname'_cg_tmp.bedg
 bedGraphToBigWig '$outdir'/'$sname'_cg_tmp.bedg '$WZSEQ_REFERENCE'.fai '$outdir'/'$sname'_cg.bw
 rm -f '$outdir'/'$sname'_cg_tmp.bedg
 '
   jobname="convertBigwigCG_"$sname
+}
+
+function __zlab_biscuitQC_20220224 {
+  cmd='
+cd '$base'
+QC.sh -o BISCUITqc/'$sname' '$WZSEQ_BISCUIT_QC_SETUP' '$WZSEQ_REFERENCE' '$sname' '$input'
+
+mkdir -p multiqc/raw/BISCUITqc/
+cp BISCUITqc/'$sname'/* multiqc/raw/BISCUITqc/
+'
+  jobname='biscuitQC_'$sname
+}
+
+function __zlab_parseBismarkCG_20220322 {
+  cmd='
+cd '$base'
+mkdir -p '$(dirname $output)'
+zcat '$bismark_meth_file' | awk '\''BEGIN{FS="\t";OFS="\t"}{print $1,$2,$2+1,$5,$6}'\'' | biscuit mergecg '$WZSEQ_REFERENCE' - | sortbed | bedtools intersect -a '$WZSEQ_CPGBED' -b - -sorted -wo | cut -f1-3,7,8 | bgzip -c >'$output'
+'
+  jobname='parseBismarkCG_'$sname
+}
+
+function __zlab_cgBedToFull_20220322 {
+  # this function makes all CG bed the same length for bsseq objects
+  cmd='
+mkdir -p '$(dirname $output)'
+bedtools intersect -a '$WZSEQ_CPGBED' -b '$input' -sorted -loj | awk -v sname='$sname' -v output='$output' '\''BEGIN{print sname >output"_B"; print sname >output"_C";}{if ($7==".") { $7="NA"; $8=0; } print $7 >output"_B"; print $8 >output"_C";}'\''
+'
+  jobname='cgBedToFull_'$sname
+}
+
+function __zlab_parseBismarkCH_20220322 {
+  cmd='
+cd '$base'
+mkdir -p '$(dirname $output)'
+mkdir -p tmp
+zcat '$bismark_meth_file' | awk '\''BEGIN{FS="\t";OFS="\t"}$6>0{print $1,$2,$2+1,$5,$6}'\'' | LC_ALL=C sort -k1,1 -k2,2n -T tmp | bgzip -c >'$output'
+'
+  jobname='parseBismarkCH_'$sname
+}
+
+function __zlab_featureMean_20220322 {
+  cmd='
+cd '$base'
+mkdir -p '$outdir'/'$sname'
+. /mnt/isilon/zhoulab/labtools/bash/20220320_KYCG.sh
+awk '\''NR>1&&$2=='$group'{split($1,a,"."); print a[1]" "$1;}'\'' '$WZSEQ_BSSEQ_FEAT'/master.txt | while read feature feature_file; do
+echo $feature $feature_file
+bedtools intersect -a '$WZSEQ_BSSEQ_FEAT'/${feature_file}.bed.gz -b '$input' -sorted -wo | cut -f4,9 | KYCGutil_computeMean | awk -v sname='$sname' '\''BEGIN{FS="\t";OFS="\t"}{print $0"\t"sname}'\''>'$outdir'/'$sname'/${feature}.txt
+done
+'
+  jobname='featureMean'$group'_'$sname
+}
+
+function __zlab_convertBigwigCH_20220414 {
+  # make a bw file, arbitrarily chose cov5
+  cmd='
+cd '$base'
+mkdir -p '$outdir'
+zcat '$input' | awk '\''$5!="." && $5>=5'\'' | cut -f1-4 >'$outdir'/'$sname'_ch_tmp.bedg
+bedGraphToBigWig '$outdir'/'$sname'_ch_tmp.bedg '$WZSEQ_REFERENCE'.fai '$outdir'/'$sname'_ch.bw
+rm -f '$outdir'/'$sname'_ch_tmp.bedg
+'
+  jobname="convertBigwigCH_"$sname
 }
 
 # function __wgbs_bismark_methylextraction {
@@ -337,16 +400,6 @@ rm -f '$outdir'/'$sname'_cg_tmp.bedg
 # # samtools flagstat '$output_bam' > '$output_bam'.flagstat
 # '
 #   jobname="biscuit_align_"${sname}"_PE_POETIC"
-# }
-
-# function __wgbs_biscuit_QC {
-#   cmd='
-# cd '$base'
-# /mnt/isilon/zhoulab/labsoftware/biscuit/production/scripts/QC.sh -v '$input_vcf' '$WZSEQ_BISCUIT_QC_SETUP' '$WZSEQ_REFERENCE' '$sname' '$input_bam'
-# mkdir -p multiqc/raw/BISCUITqc/'$sname'
-# ln -sf `readlink -f BISCUITqc` multiqc/raw/BISCUITqc
-# '
-#   jobname='biscuit_QC_'$sname
 # }
 
 # function wgbs_biscuit_align_lambdaphage {

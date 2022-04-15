@@ -17,6 +17,7 @@ function wzref_mm10LambdaT4 {
 function wzref_mm10 {
   refbase=/mnt/isilon/zhou_lab/projects/20191221_references
   export WZSEQ_REFVERSION=mm10
+  export WZSEQ_BSSEQ_FEAT=$refbase/mm10/features/
   export WZSEQ_REFERENCE=$refbase/mm10/mm10.fa
   export WZSEQ_REFERENCE_SIZE=2785373478
 
@@ -54,7 +55,7 @@ function wzref_mm10 {
   export WZSEQ_REFERENCE_SPLIT=$refbase/mm10/bowtie1/
 
   export WZSEQ_MACS_SHORT=mm
-  export WZSEQ_CPGBED=$refbase/mm10/annotation/cpg.bed
+  export WZSEQ_CPGBED=$refbase/mm10/annotation/cpg/cpg.bed.gz
   export WZSEQ_CGIBED=$refbase/mm10/annotation/cpgisland/cpgIslandExt.bed
   export WZSEQ_CGIBED_METHYLKIT=$refbase/mm10/annotation/cpgisland/cpgIslandExt.methylKit.bed
   export WZSEQ_TSSBED=$refbase/mm10/annotation/TSS/mm10.refseq.tss.bed
@@ -154,7 +155,7 @@ function wzref_hg38 {
   # export WZSEQ_RSEQC_GENE_BED=$refbase/hg19/rseqc/hg19_GENCODE_GENE_V19_comprehensive.bed
   export WZSEQ_BISMARK_BT2_INDEX=$refbase/hg38/bismark_bt2
   export WZSEQ_BISCUIT_INDEX=$refbase/hg38/biscuit/hg38.fa
-  export WZSEQ_BISCUIT_QC_SETUP=/home/zhouw3/tools/biscuit/development/biscuit/test_shen/QC_assets/hg38_QC_assets/setup.sh
+  export WZSEQ_BISCUIT_QC_SETUP=$refbase/hg38/biscuit/QC/
   export WZSEQ_GTF_ENSEMBL_UCSCNAMING=$refbase/hg38/annotation/gencode.v28.annotation.gtf
   # export WZSEQ_SUBREAD_INDEX=$refbase/hg19/subread/hg19
   # export WZSEQ_REFERENCE_SPLIT=$refbase/hg19/tophat/Homo_sapiens/UCSC/hg19/Sequence/Chromosomes

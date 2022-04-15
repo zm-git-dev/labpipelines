@@ -16,8 +16,9 @@ template="""#!/bin/bash
 #SBATCH --export=ALL
 #SBATCH -D {self.workd}
 #SBATCH -n {self.ntasks}
-#SBATCH -t {self.days}-00:00:00
+#SBATCH -t {self.days}-{self.hours}:{self.minutes}:00
 {self.depend}
+{self.nodes}
 
 set -xe
 
@@ -30,7 +31,9 @@ class Job():
         self.nameroot   = args.nameroot
         self.ppn        = args.ppn
         self.ntasks      = args.ntasks #number of tasks
-        self.days      = args.days
+        self.days      = int(args.days/1)
+        self.hours    = int((args.days % 1) * 24)
+        self.minutes    = int(((args.days % 1) * 24 % 1) * 60)
         self.memG       = args.memG
         #self.stderrdir  = args.stderr
         #self.stdoutdir  = args.stdout
@@ -39,6 +42,11 @@ class Job():
             self.depend = '#SBATCH -d %s' % args.depend
         else:
             self.depend = ''
+
+        if args.nodes:
+            self.nodes = '#SBATCH -w %s' % args.nodes
+        else:
+            self.nodes = ''
 			
         if args.gpu > 0:#--cpus-per-gpu is not compatible with -c
             self.gpu = '#SBATCH -p gpuq \n#SBATCH --gres=gpu:1'
@@ -127,7 +135,7 @@ def main(args):
         sys.stderr.write('pbs stderr: %s\n' % job.stderr)
         sys.stderr.write('memG: %d\n' % job.memG)
         sys.stderr.write('ntasks: %d\n' % job.ntasks)
-        sys.stderr.write('days: %d\n' % job.days)
+        sys.stderr.write('time limit: %d-%d:%d\n' %(job.days,job.hours,job.minutes))
         sys.stderr.write('ppn: %d\n' % job.ppn)
         sys.stderr.write('==================\n\n')
     if args.submit:
@@ -145,8 +153,9 @@ def add_default_settings(parser, d):
                         help="ppn [%d]" % d.ppn)
     parser.add_argument("-ntasks", default=d.ntasks, type=int,
                         help="ntasks [%d]" % d.ntasks)
-    parser.add_argument("-days", default=d.days, type=int,
-                        help="time limit (days) [%d]" % d.days)
+
+    parser.add_argument("-days", default=d.days, type=float,
+                        help="time limit (days), could be a int or float [%f]" % d.days)
     parser.add_argument("-workd", default=os.getcwd(),
                         help="workd [%s]" % d.workd)
     default_nameroot = os.environ['NAMEROOT'] if 'NAMEROOT' in os.environ else 'LabJob'
@@ -155,6 +164,7 @@ def add_default_settings(parser, d):
     parser.add_argument("-memG", default=d.memG, type=int,
                         help="memory in G [%d]" % d.memG)
     parser.add_argument('-depend', default='', help='dependency')
+    parser.add_argument('-nodes', default='', help='nodes, for example: -nodes c-0-08, separated by comma if more than one nodes requested.')
     parser.add_argument('-gpu', default=0, help='gpu',type=int)
     parser.add_argument('-silent', action='store_true', help='suppress info print')
 
@@ -188,7 +198,7 @@ class Default:
         # self.stderrdir = '%s/stderr/' % self.pbsdir
         self.ppn = 1
         self.ntasks = 1
-        self.days = 5
+        self.days = 2.25
         self.memG = 10
         self.workd = os.getcwd()
 
