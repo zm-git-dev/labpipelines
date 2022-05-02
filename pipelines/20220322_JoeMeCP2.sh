@@ -115,8 +115,8 @@ while read sname; do
   pipeline_eval 51 __zlab_convertBigwigCG_20220219
   
 done << EOM
-#R106W_SUB_combined
-#WT_SUB_combined
+R106W_SUB_combined
+WT_SUB_combined
 WT_BS_combined
 WT_bACE_combined
 R106W_bACE_combined
