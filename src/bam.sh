@@ -47,6 +47,22 @@ cp -a '${out_bam}'.flagstat multiqc/raw/flagstat/
   jobname='sortIndexBam_'$sname
 }
 
+function __zlab_sortIndexBam_20220505 {
+  # this function is serial, so slow
+  cmd='
+cd '$base'
+samtools sort -O bam -o '${out_bam}' -T '${in_bam}'_tmp '${in_bam}'
+samtools index '${out_bam}'
+samtools flagstat '${out_bam}' >'${out_bam}'.flagstat
+
+## setup multiqc
+mkdir -p multiqc/raw/flagstat/
+cp -a '${out_bam}'.flagstat multiqc/raw/flagstat/
+'
+  jobname='sortIndexBam_'$sname
+}
+
+
 function __zlab_bam2fastq_20211125 {
   # reverse bam to fastq
   # wzseq_bam2fastq

@@ -10,9 +10,9 @@ trim_galore --gzip --clip_R1 10 --three_prime_clip_R1 10 --length 20 --path_to_c
 
 ## setup multiqc
 mkdir -p multiqc/raw/trim_galore/
-cp -a trim/'$sname'/'$sname'*trimming_report.txt multiqc/raw/trim_galore/
-cp -a trim/'$sname'/'$sname'*fastqc.html multiqc/raw/trim_galore/
-cp -a trim/'$sname'/'$sname'*fastqc.zip multiqc/raw/trim_galore/
+cp -a trim/'$sname'/*trimming_report.txt multiqc/raw/trim_galore/
+cp -a trim/'$sname'/*fastqc.html multiqc/raw/trim_galore/
+cp -a trim/'$sname'/*fastqc.zip multiqc/raw/trim_galore/
 '
   jobname="trimGaloreSE_"$sname
 }
@@ -93,10 +93,24 @@ cd '$base'
 mkdir -p '$out_dir'
 biscuit align '$WZSEQ_BISCUIT_INDEX' -b 1 -t '$ppn' '$fastq1' '$fastq2' | samtools sort -T '$output_bam'_tmp -O bam -o '$outdir'/'${sname}'.bam
 samtools index '$outdir'/'${sname}'.bam
-samtools faidx '$outdir'/'${sname}'.bam >'$outdir'/'${sname}'.bam.flagstat
+samtools flagstat '$outdir'/'${sname}'.bam >'$outdir'/'${sname}'.bam.flagstat
 '
   jobname="biscuitAlignStrandedPE_"$sname
 }
+
+
+function __zlab_biscuitAlignStrandedSE_both_20220504 {
+ cmd='
+cd '$base'
+mkdir -p '$outdir'
+biscuit align '$WZSEQ_BISCUIT_INDEX'  -@ '$ppn' '$fastq' | samtools sort -T '${sname}'_tmp.bam -O bam -o '$outdir'/'${sname}'.bam
+samtools index '$outdir'/'${sname}'.bam
+samtools flagstat '$outdir'/'${sname}'.bam >'$outdir'/'${sname}'.bam.flagstat
+'
+  jobname="biscuitAlignStrandedSE_both."$sname
+ }
+
+
 
 function __zlab_biscuitPileup_20220219 {
   cmd='
@@ -111,6 +125,22 @@ tabix -p bed '$outdir'/'$sname'_cg.bed.gz
 '
   jobname="biscuitPileup_"$sname
 }
+
+
+function __zlab_biscuitPileup_20220505 {
+  cmd='
+cd '$base'
+mkdir -p '$outdir'
+biscuit pileup  -@ '$ppn' '$WZSEQ_REFERENCE' '$input' >'$outdir'/'$sname'.vcf
+bgzip -f '$outdir'/'$sname'.vcf
+tabix -p vcf '$outdir'/'$sname'.vcf.gz
+
+biscuit vcf2bed -k 1 -t cg '$outdir'/'$sname'.vcf.gz | cut -f1-5 | LC_ALL=C sort -k1,1 -k2,2n -T '$outdir' | biscuit mergecg '$WZSEQ_REFERENCE' - | bedtools intersect -a '$WZSEQ_CPGBED' -b - -sorted -loj | cut -f1-3,7,8 | bgzip -fc >'$outdir'/'$sname'_cg.bed.gz
+tabix -p bed '$outdir'/'$sname'_cg.bed.gz
+'
+  jobname="biscuitPileup_"$sname
+}
+
 
 function __zlab_convertBigwigCG_20220219 {
   # make a bw file, arbitrarily chose cov5
@@ -134,6 +164,22 @@ cp BISCUITqc/'$sname'/* multiqc/raw/BISCUITqc/
 '
   jobname='biscuitQC_'$sname
 }
+
+
+function __zlab_biscuitQC_20220505 {
+  cmd='
+cd '$base'
+mkdir -p '$outdir'
+QC.sh -o '$outdir'/'$sname' '$WZSEQ_BISCUIT_QC_SETUP' '$WZSEQ_REFERENCE' '$sname' '$input'
+
+mkdir -p multiqc/raw/BISCUITqc/
+cp BISCUITqc/'$sname'/* multiqc/raw/BISCUITqc/
+'
+  jobname='biscuitQC_'$sname
+}
+
+
+
 
 function __zlab_parseBismarkCG_20220322 {
   cmd='
